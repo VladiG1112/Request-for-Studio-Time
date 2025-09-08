@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request for Studio Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
+
+    <div class="bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-2xl">
+        <!-- Logo Section -->
+        <div class="flex justify-center mb-6">
+            <!-- To use your own logo, replace the URL below with the direct link to your image file hosted online -->
+            <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/blob/main/Electric%20Heart%20Sticker%20Logo.png" alt="Studio Logo" class="rounded-xl">
+        </div>
+        
+        <!-- Studio Name -->
+        <h2 class="text-xl sm:text-2xl font-bold text-purple-400 text-center mb-2">ELECTRIC HEART PRODUCTIONS</h2>
+
+        <h1 class="text-3xl sm:text-4xl font-bold text-white text-center mb-6">Request for Studio Time</h1>
+        <p class="text-gray-400 text-center mb-8">Please fill out this form and we will get back to you to confirm your booking.</p>
+
+        <!-- Calendar Section -->
+        <div class="mb-8">
+            <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4 text-center">Check Availability</h2>
+            <p class="text-center text-gray-400 mb-4">Click a green slot to book it!</p>
+            <div class="flex items-center justify-center mb-4 space-x-2">
+                <label for="dateSelector" class="text-sm font-medium text-gray-400">Select Date:</label>
+                <input type="date" id="dateSelector" name="dateSelector" required class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+            </div>
+            
+            <div id="calendar" class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                <!-- Time slots will be injected here by JavaScript -->
+            </div>
+            
+            <div id="loadingMessage" class="mt-4 text-center text-gray-400">Loading availability...</div>
+        </div>
+
+        <hr class="border-t border-gray-700 my-8">
+
+        <!-- Booking Form Section -->
+        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4 text-center">Book Your Session</h2>
+        <form id="studioRequestForm" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- Contact Information -->
+                <div>
+                    <label for="bandName" class="block text-sm font-medium text-gray-400">Band Name</label>
+                    <input type="text" id="bandName" name="bandName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="contactName" class="block text-sm font-medium text-gray-400">Band Contact Person</label>
+                    <input type="text" id="contactName" name="contactName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="genre" class="block text-sm font-medium text-gray-400">Genre of Music</label>
+                    <input type="text" id="genre" name="genre" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-400">Email Address</label>
+                    <input type="email" id="email" name="email" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-400">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+            </div>
+
+            <hr class="border-t border-gray-700">
+
+            <!-- Session Details -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-400">Date Requested</label>
+                    <input type="date" id="date" name="date" required readonly class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="time" class="block text-sm font-medium text-gray-400">Desired Start Time</label>
+                    <input type="time" id="time" name="time" required readonly class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="hours" class="block text-sm font-medium text-gray-400">Approximate Hours</label>
+                    <input type="number" id="hours" name="hours" required min="1" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+            </div>
+
+            <hr class="border-t border-gray-700">
+
+            <!-- Personnel & Equipment -->
+            <div class="space-y-6">
+                <div>
+                    <label for="people" class="block text-sm font-medium text-gray-400">Total Number of People in Studio</label>
+                    <input type="number" id="people" name="people" required min="1" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="instruments" class="block text-sm font-medium text-gray-400">Primary Instruments/Equipment to be Used</label>
+                    <input type="text" id="instruments" name="instruments" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                </div>
+                <div>
+                    <label for="specialEquipment" class="block text-sm font-medium text-gray-400">Special Equipment You Plan to Bring</label>
+                    <textarea id="specialEquipment" name="specialEquipment" rows="3" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
+                </div>
+                <div>
+                    <label for="specialConditions" class="block text-sm font-medium text-gray-400">Special Conditions or Requests</label>
+                    <textarea id="specialConditions" name="specialConditions" rows="3" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500 transition duration-300">
+                Submit Request
+            </button>
+        </form>
+        
+        <div id="status" class="mt-6 text-center text-sm font-medium"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // IMPORTANT: REPLACE THIS
+
+            const form = document.getElementById('studioRequestForm');
+            const statusDiv = document.getElementById('status');
+            const loadingMessage = document.getElementById('loadingMessage');
+            const calendar = document.getElementById('calendar');
+            const dateSelector = document.getElementById('dateSelector');
+            const dateInput = document.getElementById('date');
+            const timeInput = document.getElementById('time');
+
+            // Set the date selector to today's date and update the form date field
+            const today = new Date();
+            const todayISO = today.toISOString().split('T')[0];
+            dateSelector.value = todayISO;
+            dateInput.value = todayISO;
+            
+            // Check if the SCRIPT_URL placeholder has been replaced
+            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                statusDiv.innerHTML = "Error: Please update the 'SCRIPT_URL' variable in the code with your Google Apps Script URL.";
+                statusDiv.classList.remove('text-green-400', 'text-gray-400');
+                statusDiv.classList.add('text-red-400');
+                loadingMessage.textContent = "Configuration Error.";
+                loadingMessage.classList.add('text-red-400');
+                // Stop further execution since the URL is invalid
+                return;
+            }
+
+            async function fetchBookings() {
+                loadingMessage.classList.remove('hidden');
+                calendar.innerHTML = '';
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const bookings = await response.json();
+                        loadingMessage.classList.add('hidden');
+                        renderCalendar(bookings);
+                    } else {
+                        loadingMessage.textContent = "Error loading bookings.";
+                        loadingMessage.classList.add('text-red-400');
+                    }
+                } catch (error) {
+                    loadingMessage.textContent = "Error fetching bookings.";
+                    loadingMessage.classList.add('text-red-400');
+                    console.error('Error fetching data:', error);
+                }
+            }
+
+            function renderCalendar(bookings) {
+                const selectedDate = dateSelector.value;
+                calendar.innerHTML = '';
+
+                // Generate time slots from 5 PM to 11 PM in 1-hour increments
+                for (let i = 17; i <= 23; i++) {
+                    const time = `${String(i).padStart(2, '0')}:00`;
+                    const slotDiv = document.createElement('div');
+                    let isBooked = false;
+                    let bookingDetails = '';
+
+                    // Check if the current slot is booked on the selected date
+                    for (const booking of bookings) {
+                        if (booking.date === selectedDate && booking.time === time) {
+                            isBooked = true;
+                            bookingDetails = `Booked by ${booking.bandName}`;
+                            break;
+                        }
+                    }
+
+                    if (isBooked) {
+                        slotDiv.className = 'bg-red-600 text-white rounded-xl p-3 text-center cursor-not-allowed transition duration-300 hover:bg-red-700';
+                        slotDiv.innerHTML = `<p class="font-bold">${time}</p><p class="text-sm">Booked</p>`;
+                        slotDiv.title = bookingDetails;
+                    } else {
+                        slotDiv.className = 'bg-green-600 text-white rounded-xl p-3 text-center cursor-pointer transition duration-300 hover:bg-green-700';
+                        slotDiv.innerHTML = `<p class="font-bold">${time}</p><p class="text-sm">Available</p>`;
+                        slotDiv.addEventListener('click', () => {
+                            dateInput.value = selectedDate;
+                            timeInput.value = time;
+                            statusDiv.innerHTML = `You selected ${selectedDate} at ${time}. Please complete the form below.`;
+                            statusDiv.classList.remove('text-red-400', 'text-gray-400');
+                            statusDiv.classList.add('text-green-400');
+                        });
+                    }
+                    calendar.appendChild(slotDiv);
+                }
+            }
+
+            // Event listener for date change
+            dateSelector.addEventListener('change', fetchBookings);
+
+            // Fetch bookings when the page loads
+            fetchBookings();
+
+            // Handle new form submissions
+            form.addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                statusDiv.innerHTML = "Submitting...";
+                statusDiv.classList.remove('text-green-400', 'text-red-400');
+                statusDiv.classList.add('text-gray-400');
+
+                const formData = new FormData(event.target);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        statusDiv.innerHTML = "Thanks for your submission! We'll be in touch soon.";
+                        statusDiv.classList.remove('text-gray-400', 'text-red-400');
+                        statusDiv.classList.add('text-green-400');
+                        form.reset();
+                        fetchBookings(); // Refresh the calendar
+                    } else {
+                        statusDiv.innerHTML = "Oops! There was a problem with your submission.";
+                        statusDiv.classList.remove('text-gray-400', 'text-green-400');
+                        statusDiv.classList.add('text-red-400');
+                    }
+                } catch (error) {
+                    statusDiv.innerHTML = "Oops! An error occurred. Please try again later.";
+                    statusDiv.classList.remove('text-gray-400', 'text-green-400');
+                    statusDiv.classList.add('text-red-400');
+                    console.error('Error:', error);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

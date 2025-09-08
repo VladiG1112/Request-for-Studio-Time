@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Request for Studio Time</title>
+    <title>Electric Heart Studio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
@@ -12,231 +12,461 @@
             background-color: #121212;
             color: #e0e0e0;
         }
+        .calendar-cell {
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .calendar-cell:hover {
+            transform: translateY(-2px);
+        }
+        .disabled-date {
+            background-color: #1f2937;
+            color: #4b5563;
+            cursor: not-allowed;
+        }
+        .selected-date {
+            background-color: #8b5cf6; /* A shade of purple */
+            color: white;
+            font-weight: 700;
+        }
+        .today-outline {
+            box-shadow: 0 0 0 2px #e0e0e0;
+        }
+        .time-slot {
+            cursor: pointer;
+            border-radius: 0.5rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .time-slot:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .selected-time {
+            box-shadow: 0 0 0 3px #8b5cf6, 0 0 0 6px rgba(139, 92, 246, 0.5);
+        }
+        .nav-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
     </style>
 </head>
-<body class="p-4 sm:p-8 flex items-center justify-center min-h-screen">
+<body class="p-4 sm:p-8 flex flex-col items-center justify-center min-h-screen">
+    
+    <div class="mb-6 flex flex-col items-center">
+        <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/main/electric-heart-logo.png" alt="Electric Heart Studio Logo" class="w-24 h-24 mb-4 rounded-xl">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-purple-400 mb-2 text-center">Electric Heart Studio</h1>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Studio Time Request</h2>
+    </div>
 
-    <div class="bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-2xl">
-        <!-- Logo Section -->
-        <div class="flex justify-center mb-6">
-            <!-- The filename has been updated for better compatibility with web servers -->
-            <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/main/electric-heart-logo.png" alt="Studio Logo" class="rounded-xl w-[100px] h-[100px]">
+    <div class="bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-4xl">
+        <p class="text-gray-400 text-center mb-8">Select a date and time to book your session.</p>
+
+        <!-- Calendar and Form Container -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Calendar Section -->
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <button id="prevMonth" class="nav-button text-purple-400 hover:text-purple-600 transition duration-300">&lt;</button>
+                    <h3 id="currentMonth" class="text-xl font-bold"></h3>
+                    <button id="nextMonth" class="nav-button text-purple-400 hover:text-purple-600 transition duration-300">&gt;</button>
+                </div>
+
+                <!-- Day of the week initials -->
+                <div class="grid grid-cols-7 gap-2 text-center mb-2">
+                    <div class="text-sm font-semibold text-gray-400">S</div>
+                    <div class="text-sm font-semibold text-gray-400">M</div>
+                    <div class="text-sm font-semibold text-gray-400">T</div>
+                    <div class="text-sm font-semibold text-gray-400">W</div>
+                    <div class="text-sm font-semibold text-gray-400">T</div>
+                    <div class="text-sm font-semibold text-gray-400">F</div>
+                    <div class="text-sm font-semibold text-gray-400">S</div>
+                </div>
+                
+                <div id="calendar" class="grid grid-cols-7 gap-2 text-center"></div>
+                
+                <div id="statusMessage" class="mt-4 text-center text-sm font-medium"></div>
+
+                <!-- Time Slots -->
+                <div id="timeSlotsContainer" class="mt-8 hidden">
+                    <h4 class="text-lg font-semibold mb-2">Available Times on <span id="selectedDateText"></span></h4>
+                    <p class="text-sm text-gray-400 mb-4">All bookings are for two-hour sessions.</p>
+                    <div id="timeSlots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                </div>
+            </div>
+
+            <!-- Booking Form -->
+            <div>
+                <form id="bookingForm" class="space-y-4">
+                    <h4 class="text-lg font-semibold mb-4">Booking Details</h4>
+                    <input type="hidden" id="dateInput" name="date">
+                    <input type="hidden" id="timeInput" name="time">
+
+                    <div>
+                        <label for="bandName" class="block text-sm font-medium text-gray-400">Band Name</label>
+                        <input type="text" id="bandName" name="bandName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="contactName" class="block text-sm font-medium text-gray-400">Contact Person</label>
+                        <input type="text" id="contactName" name="contactName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="genre" class="block text-sm font-medium text-gray-400">Genre of Music</label>
+                        <input type="text" id="genre" name="genre" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-400">Email Address</label>
+                        <input type="email" id="email" name="email" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="phone" class="block text-sm font-medium text-gray-400">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="hours" class="block text-sm font-medium text-gray-400">Approximate Hours</label>
+                        <input type="number" id="hours" name="hours" min="1" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="people" class="block text-sm font-medium text-gray-400">Total People in Studio</label>
+                        <input type="number" id="people" name="people" min="1" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="instruments" class="block text-sm font-medium text-gray-400">Primary Instruments</label>
+                        <textarea id="instruments" name="instruments" rows="2" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
+                    </div>
+                    <div>
+                        <label for="specialEquipment" class="block text-sm font-medium text-gray-400">Special Equipment</label>
+                        <textarea id="specialEquipment" name="specialEquipment" rows="2" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
+                    </div>
+                    <div>
+                        <label for="specialConditions" class="block text-sm font-medium text-gray-400">Special Requests</label>
+                        <textarea id="specialConditions" name="specialConditions" rows="2" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
+                    </div>
+                    <button type="submit" id="submitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500 transition duration-300">
+                        Submit Booking
+                    </button>
+                    <p id="submissionStatus" class="mt-4 text-center text-sm font-medium"></p>
+                </form>
+            </div>
         </div>
-        
-        <!-- Studio Name -->
-        <h2 class="text-xl sm:text-2xl font-bold text-purple-400 text-center mb-2">ELECTRIC HEART PRODUCTIONS</h2>
-
-        <h1 class="text-3xl sm:text-4xl font-bold text-white text-center mb-6">Request for Studio Time</h1>
-        <p class="text-gray-400 text-center mb-8">Please fill out this form and we will get back to you to confirm your booking.</p>
-
-        <!-- Calendar Section -->
-        <div class="mb-8">
-            <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4 text-center">Check Availability</h2>
-            <p class="text-center text-gray-400 mb-4">Click a green slot to book it!</p>
-            <div class="flex items-center justify-center mb-4 space-x-2">
-                <label for="dateSelector" class="text-sm font-medium text-gray-400">Select Date:</label>
-                <input type="date" id="dateSelector" name="dateSelector" required class="px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-            </div>
-            
-            <div id="calendar" class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-                <!-- Time slots will be injected here by JavaScript -->
-            </div>
-            
-            <div id="loadingMessage" class="mt-4 text-center text-gray-400">Loading availability...</div>
-        </div>
-
-        <hr class="border-t border-gray-700 my-8">
-
-        <!-- Booking Form Section -->
-        <h2 class="text-xl sm:text-2xl font-semibold text-white mb-4 text-center">Book Your Session</h2>
-        <form id="studioRequestForm" class="space-y-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <!-- Contact Information -->
-                <div>
-                    <label for="bandName" class="block text-sm font-medium text-gray-400">Band Name</label>
-                    <input type="text" id="bandName" name="bandName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="contactName" class="block text-sm font-medium text-gray-400">Band Contact Person</label>
-                    <input type="text" id="contactName" name="contactName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="genre" class="block text-sm font-medium text-gray-400">Genre of Music</label>
-                    <input type="text" id="genre" name="genre" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-400">Email Address</label>
-                    <input type="email" id="email" name="email" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="phone" class="block text-sm font-medium text-gray-400">Phone Number</label>
-                    <input type="tel" id="phone" name="phone" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-            </div>
-
-            <hr class="border-t border-gray-700">
-
-            <!-- Session Details -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div>
-                    <label for="date" class="block text-sm font-medium text-gray-400">Date Requested</label>
-                    <input type="date" id="date" name="date" required readonly class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="time" class="block text-sm font-medium text-gray-400">Desired Start Time</label>
-                    <input type="time" id="time" name="time" required readonly class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="hours" class="block text-sm font-medium text-gray-400">Approximate Hours</label>
-                    <input type="number" id="hours" name="hours" required min="1" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-            </div>
-
-            <hr class="border-t border-gray-700">
-
-            <!-- Personnel & Equipment -->
-            <div class="space-y-6">
-                <div>
-                    <label for="people" class="block text-sm font-medium text-gray-400">Total Number of People in Studio</label>
-                    <input type="number" id="people" name="people" required min="1" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="instruments" class="block text-sm font-medium text-gray-400">Primary Instruments/Equipment to be Used</label>
-                    <input type="text" id="instruments" name="instruments" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                </div>
-                <div>
-                    <label for="specialEquipment" class="block text-sm font-medium text-gray-400">Special Equipment You Plan to Bring</label>
-                    <textarea id="specialEquipment" name="specialEquipment" rows="3" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
-                </div>
-                <div>
-                    <label for="specialConditions" class="block text-sm font-medium text-gray-400">Special Conditions or Requests</label>
-                    <textarea id="specialConditions" name="specialConditions" rows="3" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
-                </div>
-            </div>
-
-            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500 transition duration-300">
-                Submit Request
-            </button>
-        </form>
-        
-        <div id="status" class="mt-6 text-center text-sm font-medium"></div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsjMv9bynGxbjUUB0AvkvejWCpWSRGKwxkArBT9QmnqWGiB1F7jfD3w7kM5_LvbDQIyg/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWjpgpn7FhdmljFnhR3eFU_8_ugFg-XFyrBnD0Qna-0Donrbjj0oxxQxhH1YcQkFgwyA/exec';
+        const calendarEl = document.getElementById('calendar');
+        const currentMonthEl = document.getElementById('currentMonth');
+        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+        const timeSlotsEl = document.getElementById('timeSlots');
+        const selectedDateTextEl = document.getElementById('selectedDateText');
+        const statusMessageEl = document.getElementById('statusMessage');
+        const form = document.getElementById('bookingForm');
+        const submissionStatusEl = document.getElementById('submissionStatus');
+        const dateInput = document.getElementById('dateInput');
+        const timeInput = document.getElementById('timeInput');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
 
-            const form = document.getElementById('studioRequestForm');
-            const statusDiv = document.getElementById('status');
-            const loadingMessage = document.getElementById('loadingMessage');
-            const calendar = document.getElementById('calendar');
-            const dateSelector = document.getElementById('dateSelector');
-            const dateInput = document.getElementById('date');
-            const timeInput = document.getElementById('time');
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+        let selectedTimes = [];
+        let bookings = [];
+        let fetched = false;
+        
+        // Today's date and one month from now for booking logic
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        const oneMonthFromNow = new Date();
+        oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+        oneMonthFromNow.setHours(0, 0, 0, 0);
 
-            // Set the date selector to today's date and update the form date field
-            const today = new Date();
-            const todayISO = today.toISOString().split('T')[0];
-            dateSelector.value = todayISO;
-            dateInput.value = todayISO;
+        // Updated hours for two-hour sessions
+        const weekdayHours = ['5 PM', '7 PM', '9 PM'];
+        const weekendHours = ['2 PM', '4 PM'];
+
+        // Helper function to convert 12-hour time to 24-hour integer for comparison
+        function convertTo24Hour(timeStr) {
+            const [time, period] = timeStr.split(' ');
+            let [hour] = time.split(':');
+            hour = parseInt(hour);
+            if (period === 'PM' && hour !== 12) {
+                hour += 12;
+            }
+            if (period === 'AM' && hour === 12) {
+                hour = 0;
+            }
+            return hour;
+        }
+
+        // Renders the calendar grid for the current month.
+        function renderCalendar() {
+            calendarEl.innerHTML = '';
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
             
-            // This function handles the JSONP response from the Google Apps Script
-            window.handleBookings = function(bookings) {
-                loadingMessage.classList.add('hidden');
-                renderCalendar(bookings);
-            };
+            currentMonthEl.textContent = firstDayOfMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-            function fetchBookings() {
-                loadingMessage.classList.remove('hidden');
-                calendar.innerHTML = '';
-                const script = document.createElement('script');
-                script.src = `${SCRIPT_URL}?callback=handleBookings`;
-                document.body.appendChild(script);
+            const emptyCells = firstDayOfMonth.getDay();
+            for (let i = 0; i < emptyCells; i++) {
+                const dayEl = document.createElement('div');
+                calendarEl.appendChild(dayEl);
             }
 
-            function renderCalendar(bookings) {
-                const selectedDate = dateSelector.value;
-                calendar.innerHTML = '';
+            for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+                const date = new Date(currentYear, currentMonth, i);
+                date.setHours(0, 0, 0, 0); 
 
-                // Generate time slots from 5 PM to 11 PM in 1-hour increments
-                for (let i = 17; i <= 23; i++) {
-                    const time = `${String(i).padStart(2, '0')}:00`;
-                    const slotDiv = document.createElement('div');
-                    let isBooked = false;
-                    let bookingDetails = '';
-
-                    // Check if the current slot is booked on the selected date
-                    for (const booking of bookings) {
-                        if (booking.date === selectedDate && booking.time === time) {
-                            isBooked = true;
-                            bookingDetails = `Booked by ${booking.bandName}`;
-                            break;
-                        }
-                    }
-
-                    if (isBooked) {
-                        slotDiv.className = 'bg-red-600 text-white rounded-xl p-3 text-center cursor-not-allowed transition duration-300 hover:bg-red-700';
-                        slotDiv.innerHTML = `<p class="font-bold">${time}</p><p class="text-sm">Booked</p>`;
-                        slotDiv.title = bookingDetails;
-                    } else {
-                        slotDiv.className = 'bg-green-600 text-white rounded-xl p-3 text-center cursor-pointer transition duration-300 hover:bg-green-700';
-                        slotDiv.innerHTML = `<p class="font-bold">${time}</p><p class="text-sm">Available</p>`;
-                        slotDiv.addEventListener('click', () => {
-                            dateInput.value = selectedDate;
-                            timeInput.value = time;
-                            statusDiv.innerHTML = `You selected ${selectedDate} at ${time}. Please complete the form below.`;
-                            statusDiv.classList.remove('text-red-400', 'text-gray-400');
-                            statusDiv.classList.add('text-green-400');
-                        });
-                    }
-                    calendar.appendChild(slotDiv);
+                const dayEl = document.createElement('div');
+                dayEl.textContent = i;
+                dayEl.classList.add('p-2', 'rounded-lg', 'text-sm', 'text-center');
+                dayEl.dataset.date = date.toISOString().split('T')[0];
+                
+                // Check if the date is within the allowed booking range
+                if (date >= today && date <= oneMonthFromNow) {
+                    dayEl.classList.add('bg-gray-800', 'hover:bg-purple-500', 'calendar-cell', 'cursor-pointer', 'shadow-sm', 'text-gray-300');
+                    dayEl.addEventListener('click', () => handleDateClick(date));
+                } else {
+                    dayEl.classList.add('disabled-date');
                 }
+                calendarEl.appendChild(dayEl);
             }
+            updateCalendarDisplay();
+            updateNavigationButtons();
+        }
 
-            // Event listener for date change
-            dateSelector.addEventListener('change', fetchBookings);
+        // Updates the visual state of the calendar (outlines and highlights).
+        function updateCalendarDisplay() {
+            const allCells = document.querySelectorAll('.calendar-cell, .disabled-date');
+            const todayISO = today.toISOString().split('T')[0];
+            const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
 
-            // Fetch bookings when the page loads
-            fetchBookings();
+            allCells.forEach(cell => {
+                // First, remove all visual state classes to start fresh
+                cell.classList.remove('selected-date', 'today-outline');
 
-            // Handle new form submissions
-            form.addEventListener("submit", async function(event) {
-                event.preventDefault();
+                const cellDateISO = cell.dataset.date;
 
-                statusDiv.innerHTML = "Submitting...";
-                statusDiv.classList.remove('text-green-400', 'text-red-400');
-                statusDiv.classList.add('text-gray-400');
+                // Re-apply today's outline if it's the current date
+                if (cellDateISO === todayISO) {
+                    cell.classList.add('today-outline');
+                }
 
-                const formData = new FormData(event.target);
-                const data = Object.fromEntries(formData.entries());
-
-                try {
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'POST',
-                        body: JSON.stringify(data),
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.ok) {
-                        statusDiv.innerHTML = "Thanks for your submission! We'll be in touch soon.";
-                        statusDiv.classList.remove('text-gray-400', 'text-red-400');
-                        statusDiv.classList.add('text-green-400');
-                        form.reset();
-                        fetchBookings(); // Refresh the calendar
-                    } else {
-                        statusDiv.innerHTML = "Oops! There was a problem with your submission.";
-                        statusDiv.classList.remove('text-gray-400', 'text-green-400');
-                        statusDiv.classList.add('text-red-400');
-                    }
-                } catch (error) {
-                    statusDiv.innerHTML = "Oops! An error occurred. Please try again later.";
-                    statusDiv.classList.remove('text-gray-400', 'text-green-400');
-                    statusDiv.classList.add('text-red-400');
-                    console.error('Error:', error);
+                // Re-apply selected date's highlight
+                if (selectedDateISO && cellDateISO === selectedDateISO) {
+                    cell.classList.add('selected-date');
                 }
             });
+        }
+        
+        // Updates the state of the navigation buttons
+        function updateNavigationButtons() {
+            const firstDayOfCurrentMonth = new Date(currentYear, currentMonth, 1);
+            const todayMonth = today.getMonth();
+            const todayYear = today.getFullYear();
+            
+            // Disable previous month button if we are in the current month or earlier
+            if (currentYear < todayYear || (currentYear === todayYear && currentMonth <= todayMonth)) {
+                prevMonthBtn.disabled = true;
+            } else {
+                prevMonthBtn.disabled = false;
+            }
+
+            // Disable next month button if we are already a month ahead
+            const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
+            if (nextMonthDate > oneMonthFromNow) {
+                nextMonthBtn.disabled = true;
+            } else {
+                nextMonthBtn.disabled = false;
+            }
+        }
+
+
+        // Handles a user's click on a calendar date.
+        function handleDateClick(date) {
+            selectedDate = date;
+            selectedTimes = [];
+            const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            selectedDateTextEl.textContent = formattedDate;
+            dateInput.value = formattedDate;
+            
+            updateCalendarDisplay();
+            renderTimeSlots();
+            timeSlotsContainer.classList.remove('hidden');
+        }
+
+        async function fetchBookings() {
+            statusMessageEl.textContent = 'Fetching bookings...';
+            statusMessageEl.classList.add('text-gray-400');
+            statusMessageEl.classList.remove('text-red-400');
+            try {
+                // Use JSONP to fetch data to bypass CORS
+                return new Promise((resolve, reject) => {
+                    window.handleBookingsResponse = (response) => {
+                        bookings = response;
+                        fetched = true;
+                        statusMessageEl.textContent = 'Bookings loaded successfully.';
+                        statusMessageEl.classList.add('text-green-400');
+                        statusMessageEl.classList.remove('text-red-400', 'text-gray-400');
+                        resolve();
+                    };
+
+                    const script = document.createElement('script');
+                    script.src = `${SCRIPT_URL}?callback=handleBookingsResponse`;
+                    script.onerror = () => {
+                        statusMessageEl.textContent = 'Error fetching bookings.';
+                        statusMessageEl.classList.add('text-red-400');
+                        script.classList.remove('text-green-400', 'text-gray-400');
+                        reject(new Error('Failed to fetch bookings'));
+                    };
+                    document.body.appendChild(script);
+                });
+
+            } catch (error) {
+                statusMessageEl.textContent = `Error fetching bookings: ${error.message}`;
+                statusMessageEl.classList.add('text-red-400');
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function renderTimeSlots() {
+            timeSlotsEl.innerHTML = '';
+            
+            const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const hours = (dayOfWeek >= 1 && dayOfWeek <= 5) ? weekdayHours : weekendHours;
+
+            const formattedDate = selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            
+            hours.forEach(hour => {
+                const slotEl = document.createElement('div');
+                slotEl.textContent = hour;
+                slotEl.classList.add('p-2', 'rounded-lg', 'text-center', 'font-semibold', 'text-sm', 'time-slot');
+
+                const isBooked = bookings.some(booking => booking.date === formattedDate && booking.time.includes(hour));
+                
+                if (isBooked) {
+                    slotEl.classList.add('bg-red-800', 'text-gray-300', 'cursor-not-allowed');
+                } else {
+                    slotEl.classList.add('bg-green-600', 'hover:bg-green-700');
+                    slotEl.addEventListener('click', () => toggleTime(hour, slotEl));
+                }
+                timeSlotsEl.appendChild(slotEl);
+            });
+        }
+
+        function toggleTime(time, el) {
+            const index = selectedTimes.indexOf(time);
+            
+            // If the time is already selected, unselect it
+            if (index > -1) {
+                selectedTimes.splice(index, 1);
+                el.classList.remove('selected-time');
+            } else {
+                // If no times are selected, just select the current one
+                if (selectedTimes.length === 0) {
+                    selectedTimes.push(time);
+                    el.classList.add('selected-time');
+                } else {
+                    // Check for continuity
+                    const newHour = convertTo24Hour(time);
+                    const selectedHours = selectedTimes.map(convertTo24Hour).sort((a, b) => a - b);
+                    const minHour = selectedHours[0];
+                    const maxHour = selectedHours[selectedHours.length - 1];
+
+                    // Check if the new time is adjacent to the existing block
+                    if (newHour === minHour - 2 || newHour === maxHour + 2) {
+                        selectedTimes.push(time);
+                        el.classList.add('selected-time');
+                    } else {
+                        // If not continuous, show a warning and do not select
+                        submissionStatusEl.textContent = 'Please select a continuous block of time.';
+                        submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
+                        submissionStatusEl.classList.add('text-red-400');
+                        return; // Exit without adding the time
+                    }
+                }
+            }
+            
+            // Update the hidden input field for form submission
+            timeInput.value = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
+        }
+
+        // Form Submission Logic
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            if (selectedTimes.length === 0) {
+                submissionStatusEl.textContent = 'Please select at least one time slot.';
+                submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
+                submissionStatusEl.classList.add('text-red-400');
+                return;
+            }
+
+            submissionStatusEl.textContent = 'Submitting...';
+            submissionStatusEl.classList.remove('text-green-400', 'text-red-400');
+            submissionStatusEl.classList.add('text-gray-400');
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.time = selectedTimes.sort((a, b) => parseInt(a) - parseInt(b)).join(', ');
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    redirect: 'follow',
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.result === 'success') {
+                        submissionStatusEl.textContent = 'Booking submitted successfully! We will contact you shortly.';
+                        submissionStatusEl.classList.remove('text-gray-400', 'text-red-400');
+                        submissionStatusEl.classList.add('text-green-400');
+                        form.reset();
+                        selectedTimes = [];
+                        fetchBookings(); // Refresh bookings
+                    } else {
+                        throw new Error(result.error || 'Submission failed');
+                    }
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Submission Error:', error);
+                submissionStatusEl.textContent = 'Oops! An error occurred. Please try again.';
+                submissionStatusEl.classList.remove('text-gray-400', 'text-green-400');
+                submissionStatusEl.classList.add('text-red-400');
+            }
+        });
+
+        prevMonthBtn.addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+            timeSlotsContainer.classList.add('hidden');
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+            timeSlotsContainer.classList.add('hidden');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            fetchBookings();
         });
     </script>
 </body>

@@ -20,7 +20,7 @@
         <!-- Logo Section -->
         <div class="flex justify-center mb-6">
             <!-- The filename has been updated for better compatibility with web servers -->
-            <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/main/electric-heart-logo.png" alt="Studio Logo" class="rounded-xl w-24 h-24">
+            <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/main/electric-heart-logo.png" alt="Studio Logo" class="rounded-xl w-[100px] h-[100px]">
         </div>
         
         <!-- Studio Name -->
@@ -124,7 +124,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyfmydcLvN23sC86DKXcrHrTdFrQipRPv2QmKWUsxgPd4Kh7XddAtIlFplagGo5kkQbkw/exec'; // IMPORTANT: REPLACE THIS
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyfmydcLvN23sC86DKXcrHrTdFrQipRPv2QmKWUsxgPd4Kh7XddAtIlFplagGo5kkQbkw/exec';
 
             const form = document.getElementById('studioRequestForm');
             const statusDiv = document.getElementById('status');
@@ -140,41 +140,18 @@
             dateSelector.value = todayISO;
             dateInput.value = todayISO;
             
-            // Check if the SCRIPT_URL placeholder has been replaced
-            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
-                statusDiv.innerHTML = "Error: Please update the 'SCRIPT_URL' variable in the code with your Google Apps Script URL.";
-                statusDiv.classList.remove('text-green-400', 'text-gray-400');
-                statusDiv.classList.add('text-red-400');
-                loadingMessage.textContent = "Configuration Error.";
-                loadingMessage.classList.add('text-red-400');
-                // Stop further execution since the URL is invalid
-                return;
-            }
+            // This function handles the JSONP response from the Google Apps Script
+            window.handleBookings = function(bookings) {
+                loadingMessage.classList.add('hidden');
+                renderCalendar(bookings);
+            };
 
-            async function fetchBookings() {
+            function fetchBookings() {
                 loadingMessage.classList.remove('hidden');
                 calendar.innerHTML = '';
-                try {
-                    const response = await fetch(SCRIPT_URL, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.ok) {
-                        const bookings = await response.json();
-                        loadingMessage.classList.add('hidden');
-                        renderCalendar(bookings);
-                    } else {
-                        loadingMessage.textContent = "Error loading bookings.";
-                        loadingMessage.classList.add('text-red-400');
-                    }
-                } catch (error) {
-                    loadingMessage.textContent = "Error fetching bookings.";
-                    loadingMessage.classList.add('text-red-400');
-                    console.error('Error fetching data:', error);
-                }
+                const script = document.createElement('script');
+                script.src = `${SCRIPT_URL}?callback=handleBookings`;
+                document.body.appendChild(script);
             }
 
             function renderCalendar(bookings) {

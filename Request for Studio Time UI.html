@@ -124,7 +124,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE'; // IMPORTANT: REPLACE THIS
+            const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzWjpgpn7FhdmljFnhR3eFU_8_ugFg-XFyrBnD0Qna-0Donrbjj0oxxQxhH1YcQkFgwyA/exec'; // IMPORTANT: REPLACE THIS
 
             const form = document.getElementById('studioRequestForm');
             const statusDiv = document.getElementById('status');
@@ -141,7 +141,7 @@
             dateInput.value = todayISO;
             
             // Check if the SCRIPT_URL placeholder has been replaced
-            if (SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+            if (SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbzWjpgpn7FhdmljFnhR3eFU_8_ugFg-XFyrBnD0Qna-0Donrbjj0oxxQxhH1YcQkFgwyA/exec') {
                 statusDiv.innerHTML = "Error: Please update the 'SCRIPT_URL' variable in the code with your Google Apps Script URL.";
                 statusDiv.classList.remove('text-green-400', 'text-gray-400');
                 statusDiv.classList.add('text-red-400');

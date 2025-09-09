@@ -68,24 +68,31 @@
         #formStatusMessage {
             transition: opacity 1s ease-in-out;
         }
-        /* CSS for the submit button animations */
-        #submitBtn.success {
-            background-image: none !important;
-            background-color: #22c55e; /* Tailwind green-500 */
-            transition: background-color 0.5s ease-in-out;
+
+        /* Core styling for the submit button */
+        #submitBtn {
+            background-image: linear-gradient(to right, #8b5cf6, #4f46e5);
+            transition: background-color 0.5s ease-in-out, background-image 0.5s ease-in-out;
         }
 
-        #submitBtn.failure {
+        /* State for successful submission */
+        #submitBtn.success {
             background-image: none !important;
-            background-color: #ef4444; /* Tailwind red-500 */
-            transition: background-color 0.5s ease-in-out;
+            background-color: #22c55e !important; /* Tailwind green-500 */
         }
         
-        #submitBtn.normal {
-            background-image: linear-gradient(to right, var(--tw-gradient-stops));
-            --tw-gradient-from: #8b5cf6;
-            --tw-gradient-to: #4f46e5;
-            transition: background-image 0.5s ease-in-out;
+        /* State for unsuccessful submission */
+        #submitBtn.failure {
+            background-image: none !important;
+            background-color: #ef4444 !important; /* Tailwind red-500 */
+        }
+        
+        /* State when submitting */
+        #submitBtn.submitting {
+            background-image: none !important;
+            background-color: #4b5563 !important; /* Tailwind gray-600 */
+            pointer-events: none; /* Disable clicks */
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -192,7 +199,7 @@
                         <label for="specialConditions" class="block text-sm font-medium text-gray-400">Special Requests</label>
                         <textarea id="specialConditions" name="specialConditions" rows="2" class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300"></textarea>
                     </div>
-                    <button type="submit" id="submitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500 transition duration-300">
+                    <button type="submit" id="submitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-lg text-sm font-semibold text-white">
                         Submit Booking
                     </button>
                 </form>
@@ -490,7 +497,7 @@
                 // If they are not, clear the selections and show a message.
                 if (selectedTimes.length > 1 && !isConsecutive(selectedTimes)) {
                     selectedTimes = [];
-                    showStatusMessage("Multiple 2 hour bookings must be consecutive.");
+                    showStatusMessage("Deselecting a middle slot requires re-selection of consecutive slots.");
                 }
             } else {
                 // If the user selects a new time, check if it's consecutive to an existing one.
@@ -558,9 +565,7 @@
             const originalBtnText = submitBtn.textContent;
             submitBtn.textContent = 'Submitting...';
             submitBtn.disabled = true;
-            submitBtn.style.background = '#4b5563'; // Tailwind gray-600
-            submitBtn.style.backgroundImage = 'none';
-            submitBtn.style.pointerEvents = 'none'; // Prevent further clicks
+            submitBtn.classList.add('submitting');
             
             const formData = new FormData(form);
             formData.set('time', selectedTimes.join(', '));
@@ -580,11 +585,8 @@
                         
                         setTimeout(() => {
                             submitBtn.textContent = originalBtnText;
-                            submitBtn.classList.remove('success');
+                            submitBtn.classList.remove('success', 'submitting');
                             submitBtn.disabled = false;
-                            submitBtn.style.backgroundImage = 'linear-gradient(to right, #8b5cf6, #4f46e5)'; // Re-add gradient
-                            submitBtn.style.background = ''; // Clear background color
-                            submitBtn.style.pointerEvents = 'auto';
                         }, 3000); 
 
                         form.reset();
@@ -600,11 +602,8 @@
                         submitBtn.classList.add('failure');
                         setTimeout(() => {
                             submitBtn.textContent = originalBtnText;
-                            submitBtn.classList.remove('failure');
+                            submitBtn.classList.remove('failure', 'submitting');
                             submitBtn.disabled = false;
-                            submitBtn.style.backgroundImage = 'linear-gradient(to right, #8b5cf6, #4f46e5)'; // Re-add gradient
-                            submitBtn.style.background = ''; // Clear background color
-                            submitBtn.style.pointerEvents = 'auto';
                         }, 3000);
                     }
                 } else {
@@ -618,11 +617,8 @@
                 // Reset button state after a brief visual cue
                 setTimeout(() => {
                     submitBtn.textContent = originalBtnText;
-                    submitBtn.classList.remove('failure');
+                    submitBtn.classList.remove('failure', 'submitting');
                     submitBtn.disabled = false;
-                    submitBtn.style.backgroundImage = 'linear-gradient(to right, #8b5cf6, #4f46e5)'; // Re-add gradient
-                    submitBtn.style.background = ''; // Clear background color
-                    submitBtn.style.pointerEvents = 'auto';
                 }, 3000);
             }
         });

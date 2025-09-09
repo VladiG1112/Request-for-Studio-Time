@@ -39,8 +39,13 @@
             border-radius: 0.5rem;
             transition: background-color 0.3s, transform 0.2s;
         }
-        .time-slot:hover {
-            transform: translateY(-2px);
+        /* Mobile-first: No hover effect on small screens */
+        /* Only apply hover effect for time slots on larger screens (sm and up) */
+        @media (min-width: 640px) {
+            .time-slot:hover {
+                background-color: #a78bfa; /* A slightly lighter purple for hover */
+                transform: translateY(-2px);
+            }
         }
         .selected-time {
             box-shadow: 0 0 0 3px #8b5cf6, 0 0 0 6px rgba(139, 92, 246, 0.5);
@@ -451,7 +456,7 @@
                     // We don't need a click event listener if it's booked
                 } else {
                     // Apply normal styling and add a click event listener
-                    slotEl.classList.add('time-slot', 'bg-gray-800', 'hover:bg-purple-500', 'text-gray-300');
+                    slotEl.classList.add('time-slot', 'bg-gray-800', 'text-gray-300');
                     slotEl.addEventListener('click', () => toggleTime(slotEl));
                 }
 

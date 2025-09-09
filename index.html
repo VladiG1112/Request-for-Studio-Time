@@ -50,6 +50,12 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        .booked-slot {
+            background-color: #ef4444; /* red-500 */
+            color: white;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center justify-center min-h-screen">
@@ -99,7 +105,7 @@
 
             <!-- Booking Form Section -->
             <div>
-                <form id="bookingForm" class="space-y-4" action="https://script.google.com/macros/s/AKfycbxP_RZHhnEGKE7kotxRkYtHoGiBuDHV31Xi52wpVb04YyVvUEnNhnRpIAmxbQdC0NWrvQ/exec" method="POST">
+                <form id="bookingForm" class="space-y-4">
                     <h4 class="text-lg font-semibold mb-4">Booking Details</h4>
                     <input type="hidden" id="dateInput" name="date">
                     <input type="hidden" id="timeInput" name="time">
@@ -149,258 +155,291 @@
             </div>
         </div>
     </div>
-
-    <!-- JavaScript for Calendar and Form Submission -->
+    
     <script>
-        // DOM element references
-        const calendarEl = document.getElementById('calendar');
-        const currentMonthEl = document.getElementById('currentMonth');
-        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
-        const timeSlotsEl = document.getElementById('timeSlots');
-        const selectedDateTextEl = document.getElementById('selectedDateText');
-        const statusMessageEl = document.getElementById('statusMessage');
-        const form = document.getElementById('bookingForm');
-        const submissionStatusEl = document.getElementById('submissionStatus');
-        const dateInput = document.getElementById('dateInput');
-        const timeInput = document.getElementById('timeInput');
-        const prevMonthBtn = document.getElementById('prevMonth');
-        const nextMonthBtn = document.getElementById('nextMonth');
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendarEl = document.getElementById('calendar');
+            const currentMonthEl = document.getElementById('currentMonth');
+            const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+            const timeSlotsEl = document.getElementById('timeSlots');
+            const selectedDateTextEl = document.getElementById('selectedDateText');
+            const statusMessageEl = document.getElementById('statusMessage');
+            const form = document.getElementById('bookingForm');
+            const submissionStatusEl = document.getElementById('submissionStatus');
+            const dateInput = document.getElementById('dateInput');
+            const timeInput = document.getElementById('timeInput');
+            const prevMonthBtn = document.getElementById('prevMonth');
+            const nextMonthBtn = document.getElementById('nextMonth');
 
-        // Global state variables for the app logic
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let selectedDate = null;
-        let selectedTimes = [];
-        
-        // Today's date and one month from now for booking logic
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); 
-        const oneMonthFromNow = new Date();
-        oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
-        oneMonthFromNow.setHours(0, 0, 0, 0);
-
-        // Hours for two-hour sessions
-        const weekdayHours = ['5 PM', '7 PM', '9 PM'];
-        const weekendHours = ['2 PM', '4 PM'];
-
-        // Helper function to convert 12-hour time to 24-hour integer for comparison
-        function convertTo24Hour(timeStr) {
-            const [time, period] = timeStr.split(' ');
-            let [hour] = time.split(':');
-            hour = parseInt(hour);
-            if (period === 'PM' && hour !== 12) {
-                hour += 12;
-            }
-            if (period === 'AM' && hour === 12) {
-                hour = 0;
-            }
-            return hour;
-        }
-
-        // Renders the calendar grid for the current month.
-        function renderCalendar() {
-            calendarEl.innerHTML = '';
-            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-            const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+            let currentMonth = new Date().getMonth();
+            let currentYear = new Date().getFullYear();
+            let selectedDate = null;
+            let selectedTimes = [];
+            let bookedTimes = {};
             
-            currentMonthEl.textContent = firstDayOfMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            const oneMonthFromNow = new Date();
+            oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+            oneMonthFromNow.setHours(0, 0, 0, 0);
 
-            const emptyCells = firstDayOfMonth.getDay();
-            for (let i = 0; i < emptyCells; i++) {
-                const dayEl = document.createElement('div');
-                calendarEl.appendChild(dayEl);
+            // Updated hours for two-hour sessions
+            const weekdayHours = ['5 PM', '7 PM', '9 PM'];
+            const weekendHours = ['2 PM', '4 PM'];
+
+            // Fetches booking data from the Google Apps Script
+            window.handleBookingsResponse = function(response) {
+                if (response && response.bookings) {
+                    bookedTimes = {};
+                    response.bookings.forEach(booking => {
+                        const date = booking.date;
+                        if (!bookedTimes[date]) {
+                            bookedTimes[date] = new Set();
+                        }
+                        bookedTimes[date].add(booking.time);
+                    });
+                }
+                statusMessageEl.textContent = '';
+                renderCalendar();
+                renderTimeSlots();
+            };
+
+            function fetchBookedData() {
+                statusMessageEl.textContent = 'Loading bookings...';
+                const scriptUrl = 'https://script.google.com/macros/s/AKfycbwQf3L4P4p4R_2g1bXj0J1r0Vb6a8k7T1q0bXl1V1f1/exec'; // Replace with your script URL
+                const script = document.createElement('script');
+                script.src = `${scriptUrl}?type=bookings&callback=handleBookingsResponse`;
+                document.body.appendChild(script);
             }
 
-            for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
-                const date = new Date(currentYear, currentMonth, i);
-                date.setHours(0, 0, 0, 0); 
-
-                const dayEl = document.createElement('div');
-                dayEl.textContent = i;
-                dayEl.classList.add('p-2', 'rounded-lg', 'text-sm', 'text-center');
-                dayEl.dataset.date = date.toISOString().split('T')[0];
+            // Renders the calendar grid for the current month.
+            function renderCalendar() {
+                calendarEl.innerHTML = '';
+                const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+                const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
                 
-                // Check if the date is within the allowed booking range
-                if (date >= today && date <= oneMonthFromNow) {
-                    dayEl.classList.add('bg-gray-800', 'hover:bg-purple-500', 'calendar-cell', 'cursor-pointer', 'shadow-sm', 'text-gray-300');
-                    dayEl.addEventListener('click', () => handleDateClick(date));
-                } else {
-                    dayEl.classList.add('disabled-date');
-                }
-                calendarEl.appendChild(dayEl);
-            }
-            updateCalendarDisplay();
-            updateNavigationButtons();
-        }
+                currentMonthEl.textContent = firstDayOfMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-        // Updates the visual state of the calendar (outlines and highlights).
-        function updateCalendarDisplay() {
-            const allCells = document.querySelectorAll('.calendar-cell, .disabled-date');
-            const todayISO = today.toISOString().split('T')[0];
-            const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
-
-            allCells.forEach(cell => {
-                cell.classList.remove('selected-date', 'today-outline');
-
-                const cellDateISO = cell.dataset.date;
-
-                if (cellDateISO === todayISO) {
-                    cell.classList.add('today-outline');
+                const emptyCells = firstDayOfMonth.getDay();
+                for (let i = 0; i < emptyCells; i++) {
+                    const dayEl = document.createElement('div');
+                    calendarEl.appendChild(dayEl);
                 }
 
-                if (selectedDateISO && cellDateISO === selectedDateISO) {
-                    cell.classList.add('selected-date');
-                }
-            });
-        }
-        
-        // Updates the state of the navigation buttons
-        function updateNavigationButtons() {
-            const todayMonth = today.getMonth();
-            const todayYear = today.getFullYear();
-            
-            if (currentYear < todayYear || (currentYear === todayYear && currentMonth <= todayMonth)) {
-                prevMonthBtn.disabled = true;
-            } else {
-                prevMonthBtn.disabled = false;
-            }
+                for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+                    const date = new Date(currentYear, currentMonth, i);
+                    date.setHours(0, 0, 0, 0); 
 
-            const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
-            if (nextMonthDate > oneMonthFromNow) {
-                nextMonthBtn.disabled = true;
-            } else {
-                nextMonthBtn.disabled = false;
-            }
-        }
-
-        // Handles a user's click on a calendar date.
-        function handleDateClick(date) {
-            selectedDate = date;
-            selectedTimes = [];
-            const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-            selectedDateTextEl.textContent = formattedDate;
-            dateInput.value = formattedDate;
-            
-            updateCalendarDisplay();
-            renderTimeSlots();
-            timeSlotsContainer.classList.remove('hidden');
-        }
-
-        // Renders the available time slots for the selected date
-        function renderTimeSlots() {
-            timeSlotsEl.innerHTML = '';
-            
-            const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-            const hours = (dayOfWeek >= 1 && dayOfWeek <= 5) ? weekdayHours : weekendHours;
-
-            hours.forEach(hour => {
-                const slotEl = document.createElement('div');
-                slotEl.textContent = hour;
-                slotEl.classList.add('p-2', 'rounded-lg', 'text-center', 'font-semibold', 'text-sm', 'time-slot', 'bg-green-600', 'hover:bg-green-700');
-                slotEl.addEventListener('click', () => toggleTime(hour, slotEl));
-                timeSlotsEl.appendChild(slotEl);
-            });
-        }
-
-        // Toggles the selection of a time slot
-        function toggleTime(time, el) {
-            const index = selectedTimes.indexOf(time);
-            
-            if (index > -1) {
-                selectedTimes.splice(index, 1);
-                el.classList.remove('selected-time');
-            } else {
-                if (selectedTimes.length === 0) {
-                    selectedTimes.push(time);
-                    el.classList.add('selected-time');
-                } else {
-                    const newHour = convertTo24Hour(time);
-                    const selectedHours = selectedTimes.map(convertTo24Hour).sort((a, b) => a - b);
-                    const minHour = selectedHours[0];
-                    const maxHour = selectedHours[selectedHours.length - 1];
-
-                    if (newHour === minHour - 2 || newHour === maxHour + 2) {
-                        selectedTimes.push(time);
-                        el.classList.add('selected-time');
+                    const dayEl = document.createElement('div');
+                    dayEl.textContent = i;
+                    dayEl.classList.add('p-2', 'rounded-lg', 'text-sm', 'text-center');
+                    dayEl.dataset.date = date.toISOString().split('T')[0];
+                    
+                    // Check if the date is within the allowed booking range
+                    if (date >= today && date <= oneMonthFromNow) {
+                        dayEl.classList.add('bg-gray-800', 'hover:bg-purple-500', 'calendar-cell', 'cursor-pointer', 'shadow-sm', 'text-gray-300');
+                        dayEl.addEventListener('click', () => handleDateClick(date));
                     } else {
-                        submissionStatusEl.textContent = 'Please select a continuous block of time.';
-                        submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
+                        dayEl.classList.add('disabled-date');
+                    }
+                    calendarEl.appendChild(dayEl);
+                }
+                updateCalendarDisplay();
+                updateNavigationButtons();
+            }
+
+            // Updates the visual state of the calendar (outlines and highlights).
+            function updateCalendarDisplay() {
+                const allCells = document.querySelectorAll('.calendar-cell, .disabled-date');
+                const todayISO = today.toISOString().split('T')[0];
+                const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+
+                allCells.forEach(cell => {
+                    cell.classList.remove('selected-date'); // Always remove the selected highlight first
+                    if (cell.dataset.date === todayISO) {
+                        cell.classList.add('today-outline');
+                    } else {
+                        cell.classList.remove('today-outline');
+                    }
+                    if (selectedDateISO && cell.dataset.date === selectedDateISO) {
+                        cell.classList.add('selected-date');
+                    }
+                });
+            }
+
+            function handleDateClick(date) {
+                selectedDate = date;
+                selectedTimes = [];
+                updateCalendarDisplay();
+                
+                const dayOfWeek = date.getDay();
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                const availableHours = isWeekend ? weekendHours : weekdayHours;
+                
+                selectedDateTextEl.textContent = selectedDate.toDateString();
+                timeSlotsContainer.classList.remove('hidden');
+                renderTimeSlots(availableHours);
+            }
+            
+            function renderTimeSlots(hours) {
+                timeSlotsEl.innerHTML = '';
+                const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+
+                if (!hours) {
+                    return;
+                }
+
+                hours.forEach(hour => {
+                    const slotEl = document.createElement('div');
+                    slotEl.textContent = hour;
+                    slotEl.classList.add('p-3', 'text-center', 'bg-gray-800', 'rounded-xl', 'time-slot', 'shadow-lg');
+
+                    const isBooked = bookedTimes[selectedDateISO] && bookedTimes[selectedDateISO].has(hour);
+                    if (isBooked) {
+                        slotEl.classList.add('booked-slot');
+                    } else {
+                        slotEl.addEventListener('click', () => handleTimeClick(hour));
+                    }
+                    timeSlotsEl.appendChild(slotEl);
+                });
+            }
+
+            function handleTimeClick(time) {
+                const isBooked = bookedTimes[selectedDate.toISOString().split('T')[0]] && bookedTimes[selectedDate.toISOString().split('T')[0]].has(time);
+                if (isBooked) {
+                    return;
+                }
+                if (selectedTimes.includes(time)) {
+                    selectedTimes = selectedTimes.filter(t => t !== time);
+                } else {
+                    const isContinuous = selectedTimes.length === 0 || 
+                                         (selectedTimes.length > 0 && 
+                                          (convertTo24Hour(time) === convertTo24Hour(selectedTimes[selectedTimes.length - 1]) + 2));
+                    if (isContinuous) {
+                        selectedTimes.push(time);
+                    } else {
+                        submissionStatusEl.textContent = "Please select continuous time slots.";
                         submissionStatusEl.classList.add('text-red-400');
+                        setTimeout(() => {
+                            submissionStatusEl.textContent = '';
+                            submissionStatusEl.classList.remove('text-red-400');
+                        }, 3000);
                         return;
                     }
                 }
-            }
-            
-            timeInput.value = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
-        }
-
-        // Form Submission Logic to Google Apps Script
-        form.addEventListener('submit', async function(event) {
-            event.preventDefault();
-
-            if (selectedTimes.length === 0) {
-                submissionStatusEl.textContent = 'Please select at least one time slot.';
-                submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
-                submissionStatusEl.classList.add('text-red-400');
-                return;
-            }
-
-            submissionStatusEl.textContent = 'Submitting...';
-            submissionStatusEl.classList.remove('text-green-400', 'text-red-400');
-            submissionStatusEl.classList.add('text-gray-400');
-
-            const formData = new FormData(form);
-            // Ensure the hidden inputs for date and time are added to the form data
-            formData.set('date', dateInput.value);
-            formData.set('time', selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', '));
-            
-            try {
-                const response = await fetch(event.target.action, {
-                    method: 'POST',
-                    body: formData, // Send the FormData object directly
-                    mode: 'no-cors' 
+                
+                const allSlots = document.querySelectorAll('.time-slot');
+                allSlots.forEach(slot => {
+                    slot.classList.remove('selected-time');
+                    if (selectedTimes.includes(slot.textContent)) {
+                        slot.classList.add('selected-time');
+                    }
                 });
-
-                // The response check is different with no-cors mode, so we assume success if no error is thrown
-                submissionStatusEl.textContent = 'Booking submitted successfully! We will contact you shortly.';
-                submissionStatusEl.classList.remove('text-gray-400', 'text-red-400');
-                submissionStatusEl.classList.add('text-green-400');
-                form.reset();
-                selectedTimes = [];
-
-            } catch (error) {
-                submissionStatusEl.textContent = "Oops! An error occurred. Please try again later.";
-                submissionStatusEl.classList.remove('text-green-400', 'text-green-400');
-                submissionStatusEl.classList.add('text-red-400');
-                console.error('Error:', error);
             }
-        });
-
-        // Event listeners for month navigation
-        prevMonthBtn.addEventListener('click', () => {
-            currentMonth--;
-            if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
+            
+            function convertTo24Hour(timeStr) {
+                const [time, period] = timeStr.split(' ');
+                let [hour] = time.split(':');
+                hour = parseInt(hour);
+                if (period === 'PM' && hour !== 12) {
+                    hour += 12;
+                }
+                if (period === 'AM' && hour === 12) {
+                    hour = 0;
+                }
+                return hour;
             }
-            renderCalendar();
-            timeSlotsContainer.classList.add('hidden');
-        });
 
-        nextMonthBtn.addEventListener('click', () => {
-            currentMonth++;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
+            // Updates the state of the navigation buttons
+            function updateNavigationButtons() {
+                const todayMonth = today.getMonth();
+                const todayYear = today.getFullYear();
+                
+                // Disable previous month button if we are in the current month or earlier
+                if (currentYear < todayYear || (currentYear === todayYear && currentMonth <= todayMonth)) {
+                    prevMonthBtn.disabled = true;
+                } else {
+                    prevMonthBtn.disabled = false;
+                }
+
+                // Disable next month button if we are already a month ahead
+                const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
+                if (nextMonthDate > oneMonthFromNow) {
+                    nextMonthBtn.disabled = true;
+                } else {
+                    nextMonthBtn.disabled = false;
+                }
             }
-            renderCalendar();
-            timeSlotsContainer.classList.add('hidden');
-        });
+            
+            // Event listeners for month navigation
+            prevMonthBtn.addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderCalendar();
+            });
 
-        // Initial rendering on page load
-        window.onload = function() {
-            renderCalendar();
-        };
+            nextMonthBtn.addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar();
+            });
+
+            // Handle form submission
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!selectedDate || selectedTimes.length === 0) {
+                    submissionStatusEl.textContent = "Please select a date and time slot(s).";
+                    submissionStatusEl.classList.add('text-red-400');
+                    return;
+                }
+
+                submissionStatusEl.textContent = "Submitting booking...";
+                submissionStatusEl.classList.remove('text-red-400', 'text-green-400');
+                submissionStatusEl.classList.add('text-yellow-400');
+
+                try {
+                    const formData = new FormData(form);
+                    formData.set('date', selectedDate.toLocaleDateString());
+                    formData.set('time', selectedTimes.join(', '));
+                    
+                    const response = await fetch(form.action, {
+                        method: 'POST',
+                        body: formData,
+                        mode: 'no-cors'
+                    });
+                    
+                    if (response.status === 0 || response.ok) {
+                         submissionStatusEl.textContent = "Booking submitted successfully! You should receive an email confirmation.";
+                         submissionStatusEl.classList.remove('text-yellow-400');
+                         submissionStatusEl.classList.add('text-green-400');
+                         form.reset();
+                         selectedDate = null;
+                         selectedTimes = [];
+                         timeSlotsContainer.classList.add('hidden');
+                         fetchBookedData(); // Re-fetch to update booked slots
+                    } else {
+                         submissionStatusEl.textContent = "Oops! An error occurred. Please try again.";
+                         submissionStatusEl.classList.remove('text-yellow-400');
+                         submissionStatusEl.classList.add('text-red-400');
+                    }
+                } catch (error) {
+                    console.error('Submission error:', error);
+                    submissionStatusEl.textContent = "Oops! An error occurred. Please try again.";
+                    submissionStatusEl.classList.remove('text-yellow-400');
+                    submissionStatusEl.classList.add('text-red-400');
+                }
+            });
+
+            // Initial render and data fetch
+            fetchBookedData();
+        });
     </script>
 </body>
 </html>

@@ -183,7 +183,8 @@
 
     <script>
         // Paste your new Google Apps Script URL here.
-        const SCRIPT_URL = 'hhttps://script.google.com/macros/s/AKfycbwe6kSLFm5U9KuckKxMhCFIN-v9jzRY-hXvn5dI0pRYiW9_-5Uc9rQ1MMDnVJw2ETq6LQ/exec';
+        // It should look something like: https://script.google.com/macros/s/YOUR_UNIQUE_ID/exec
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwu3EDX7pRJRH7RCu6JI4KWJdcDkWDtG6nHQ33v4Hnk4W95FqExpmXl_tCq0hTSSH9yYw/exec';
         
         // DOM element references
         const calendarEl = document.getElementById('calendar');
@@ -234,6 +235,11 @@
             return hour;
         }
 
+        // Helper function to extract just the number from the time string
+        function extractTimeNumber(timeStr) {
+            return parseInt(timeStr.split(' ')[0]);
+        }
+        
         /**
          * Checks if the selected time slots form a consecutive block.
          * @returns {boolean} True if consecutive, false otherwise.
@@ -242,9 +248,7 @@
             if (selectedTimes.length <= 1) {
                 return true;
             }
-            const sortedHours = selectedTimes
-                .map(convertTo24Hour)
-                .sort((a, b) => a - b);
+            const sortedHours = selectedTimes.slice().sort((a, b) => a - b);
             
             for (let i = 0; i < sortedHours.length - 1; i++) {
                 // Check if the difference between consecutive hours is exactly 2
@@ -355,7 +359,7 @@
             console.log('Attempting to fetch bookings...');
             console.log('Using SCRIPT_URL:', SCRIPT_URL);
 
-            if (!SCRIPT_URL) {
+            if (!SCRIPT_URL || SCRIPT_URL === '') {
                 const message = 'Please deploy your Google Apps Script and update SCRIPT_URL.';
                 statusMessageEl.textContent = message;
                 statusMessageEl.classList.add('text-red-400');
@@ -378,8 +382,17 @@
                     throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
                 }
                 
-                const data = await response.json();
-                console.log('API response data:', data); // Log the raw response
+                // Add more detailed logging to see the exact server response
+                const rawResponseText = await response.text();
+                console.log('Received raw text response:', rawResponseText);
+
+                let data;
+                try {
+                    data = JSON.parse(rawResponseText);
+                    console.log('Parsed JSON data:', data);
+                } catch (jsonError) {
+                    throw new Error(`Invalid JSON response: ${jsonError.message}`);
+                }
 
                 if (data && data.error) {
                     statusMessageEl.textContent = `Server Error: ${data.error}`;
@@ -392,6 +405,7 @@
                         if (!bookedTimes[date]) {
                             bookedTimes[date] = new Set();
                         }
+                        // Now we store the time as a number
                         bookedTimes[date].add(booking.time);
                     });
                     statusMessageEl.textContent = 'Bookings loaded successfully.';
@@ -423,7 +437,8 @@
             const formattedDate = selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
             
             hours.forEach(hour => {
-                const isBooked = bookedTimes[formattedDate] && bookedTimes[formattedDate].has(hour);
+                const timeNumber = extractTimeNumber(hour);
+                const isBooked = bookedTimes[formattedDate] && bookedTimes[formattedDate].has(timeNumber);
                 
                 const slotEl = document.createElement('div');
                 slotEl.textContent = hour;
@@ -472,7 +487,9 @@
         }
         
         function toggleTime(time, el) {
-            const index = selectedTimes.indexOf(time);
+            // Get the numeric time for logic
+            const timeNumber = extractTimeNumber(time);
+            const index = selectedTimes.indexOf(timeNumber);
             
             if (index > -1) {
                 // Deselecting a time slot
@@ -482,7 +499,7 @@
                 // Check if the remaining times are now non-consecutive
                 if (selectedTimes.length > 1 && !isConsecutive()) {
                     // Find the last selected time based on its position in the sorted array
-                    const sortedTimes = selectedTimes.slice().sort((a,b) => convertTo24Hour(a) - convertTo24Hour(b));
+                    const sortedTimes = selectedTimes.slice().sort((a,b) => a - b);
                     const lastTime = sortedTimes[sortedTimes.length - 1];
                     const lastTimeIndex = selectedTimes.indexOf(lastTime);
 
@@ -499,22 +516,22 @@
             } else {
                 // Selecting a new time slot
                 // Check if the new selection would create a non-consecutive block
-                const tempTimes = [...selectedTimes, time];
+                const tempTimes = [...selectedTimes, timeNumber];
                 if (tempTimes.length > 1 && !isConsecutiveWithNewTime(tempTimes)) {
                      showStatusMessage('Multiple 2 hour bookings must be consecutive bookings.');
                      return;
                 }
-                selectedTimes.push(time);
+                selectedTimes.push(timeNumber);
                 el.classList.add('selected-time');
             }
             
             // Update the hidden input field for form submission
-            timeInput.value = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
+            timeInput.value = selectedTimes.sort((a, b) => a - b).join(', ');
         }
         
         // Helper function to check for continuity with a new time slot
         function isConsecutiveWithNewTime(times) {
-            const sortedHours = times.map(convertTo24Hour).sort((a, b) => a - b);
+            const sortedHours = times.slice().sort((a, b) => a - b);
             for (let i = 0; i < sortedHours.length - 1; i++) {
                 if (sortedHours[i + 1] - sortedHours[i] !== 2) {
                     return false;

@@ -64,11 +64,6 @@
     <div class="bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-4xl">
         <p class="text-gray-400 text-center mb-8">Select a date and time to book your session.</p>
 
-        <!-- User ID display (now hidden) -->
-        <div class="hidden text-sm text-gray-400 text-center mb-4">
-            Your User ID: <span id="userIdDisplay" class="font-mono text-xs text-purple-300">Loading...</span>
-        </div>
-
         <!-- Main Grid Container: calendar and form -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Calendar Section -->
@@ -104,7 +99,7 @@
 
             <!-- Booking Form Section -->
             <div>
-                <form id="bookingForm" class="space-y-4">
+                <form id="bookingForm" class="space-y-4" action="https://script.google.com/macros/s/AKfycbxP_RZHhnEGKE7kotxRkYtHoGiBuDHV31Xi52wpVb04YyVvUEnNhnRpIAmxbQdC0NWrvQ/exec" method="POST">
                     <h4 class="text-lg font-semibold mb-4">Booking Details</h4>
                     <input type="hidden" id="dateInput" name="date">
                     <input type="hidden" id="timeInput" name="time">
@@ -155,24 +150,8 @@
         </div>
     </div>
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Set log level to debug for development
-        setLogLevel('debug');
-        
-        // Provided global variables from the environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-
-        let db, auth, userId = null;
-        let bookings = [];
-
+    <!-- JavaScript for Calendar and Form Submission -->
+    <script>
         // DOM element references
         const calendarEl = document.getElementById('calendar');
         const currentMonthEl = document.getElementById('currentMonth');
@@ -186,7 +165,6 @@
         const timeInput = document.getElementById('timeInput');
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
-        const userIdDisplay = document.getElementById('userIdDisplay');
 
         // Global state variables for the app logic
         let currentMonth = new Date().getMonth();
@@ -201,7 +179,7 @@
         oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
         oneMonthFromNow.setHours(0, 0, 0, 0);
 
-        // Updated hours for two-hour sessions
+        // Hours for two-hour sessions
         const weekdayHours = ['5 PM', '7 PM', '9 PM'];
         const weekendHours = ['2 PM', '4 PM'];
 
@@ -262,17 +240,14 @@
             const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
 
             allCells.forEach(cell => {
-                // First, remove all visual state classes to start fresh
                 cell.classList.remove('selected-date', 'today-outline');
 
                 const cellDateISO = cell.dataset.date;
 
-                // Re-apply today's outline if it's the current date
                 if (cellDateISO === todayISO) {
                     cell.classList.add('today-outline');
                 }
 
-                // Re-apply selected date's highlight
                 if (selectedDateISO && cellDateISO === selectedDateISO) {
                     cell.classList.add('selected-date');
                 }
@@ -284,14 +259,12 @@
             const todayMonth = today.getMonth();
             const todayYear = today.getFullYear();
             
-            // Disable previous month button if we are in the current month or earlier
             if (currentYear < todayYear || (currentYear === todayYear && currentMonth <= todayMonth)) {
                 prevMonthBtn.disabled = true;
             } else {
                 prevMonthBtn.disabled = false;
             }
 
-            // Disable next month button if we are already a month ahead
             const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
             if (nextMonthDate > oneMonthFromNow) {
                 nextMonthBtn.disabled = true;
@@ -320,21 +293,11 @@
             const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
             const hours = (dayOfWeek >= 1 && dayOfWeek <= 5) ? weekdayHours : weekendHours;
 
-            const formattedDate = selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
-            
             hours.forEach(hour => {
                 const slotEl = document.createElement('div');
                 slotEl.textContent = hour;
-                slotEl.classList.add('p-2', 'rounded-lg', 'text-center', 'font-semibold', 'text-sm', 'time-slot');
-
-                const isBooked = bookings.some(booking => booking.date === formattedDate && booking.time.includes(hour));
-                
-                if (isBooked) {
-                    slotEl.classList.add('bg-red-800', 'text-gray-300', 'cursor-not-allowed');
-                } else {
-                    slotEl.classList.add('bg-green-600', 'hover:bg-green-700');
-                    slotEl.addEventListener('click', () => toggleTime(hour, slotEl));
-                }
+                slotEl.classList.add('p-2', 'rounded-lg', 'text-center', 'font-semibold', 'text-sm', 'time-slot', 'bg-green-600', 'hover:bg-green-700');
+                slotEl.addEventListener('click', () => toggleTime(hour, slotEl));
                 timeSlotsEl.appendChild(slotEl);
             });
         }
@@ -371,7 +334,7 @@
             timeInput.value = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
         }
 
-        // Form Submission Logic to Firestore
+        // Form Submission Logic to Google Apps Script
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
 
@@ -389,24 +352,32 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             data.time = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
-            data.submittedAt = new Date().toISOString();
 
             try {
-                const collectionRef = collection(db, `/artifacts/${appId}/public/data/bookings`);
-                await addDoc(collectionRef, data);
-                
-                submissionStatusEl.textContent = 'Booking submitted successfully! We will contact you shortly.';
-                submissionStatusEl.classList.remove('text-gray-400', 'text-red-400');
-                submissionStatusEl.classList.add('text-green-400');
-                
-                form.reset();
-                selectedTimes = [];
+                const response = await fetch(event.target.action, {
+                    method: 'POST',
+                    body: JSON.stringify(data),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
 
+                if (response.ok) {
+                    submissionStatusEl.textContent = 'Booking submitted successfully! We will contact you shortly.';
+                    submissionStatusEl.classList.remove('text-gray-400', 'text-red-400');
+                    submissionStatusEl.classList.add('text-green-400');
+                    form.reset();
+                    selectedTimes = [];
+                } else {
+                    submissionStatusEl.textContent = "Oops! There was a problem with your submission.";
+                    submissionStatusEl.classList.remove('text-gray-400', 'text-green-400');
+                    submissionStatusEl.classList.add('text-red-400');
+                }
             } catch (error) {
-                console.error('Submission Error:', error);
-                submissionStatusEl.textContent = 'Oops! An error occurred. Please try again.';
+                submissionStatusEl.textContent = "Oops! An error occurred. Please try again later.";
                 submissionStatusEl.classList.remove('text-gray-400', 'text-green-400');
                 submissionStatusEl.classList.add('text-red-400');
+                console.error('Error:', error);
             }
         });
 
@@ -431,56 +402,9 @@
             timeSlotsContainer.classList.add('hidden');
         });
 
-        // Initialize Firebase and set up real-time listener
-        window.onload = async function() {
-            try {
-                const app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                // Authenticate user
-                if (initialAuthToken) {
-                    await signInWithCustomToken(auth, initialAuthToken);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        userIdDisplay.textContent = userId;
-                        
-                        // Set up real-time listener for bookings
-                        const bookingsQuery = query(collection(db, `/artifacts/${appId}/public/data/bookings`));
-                        onSnapshot(bookingsQuery, (querySnapshot) => {
-                            bookings = [];
-                            querySnapshot.forEach((doc) => {
-                                bookings.push(doc.data());
-                            });
-                            console.log("Bookings updated from Firestore:", bookings);
-                            // Re-render time slots if a date is already selected to reflect new bookings
-                            if (selectedDate) {
-                                renderTimeSlots();
-                            }
-                        }, (error) => {
-                            console.error("Error fetching real-time bookings: ", error);
-                            statusMessageEl.textContent = 'Error fetching bookings from database.';
-                            statusMessageEl.classList.add('text-red-400');
-                            statusMessageEl.classList.remove('text-gray-400', 'text-green-400');
-                        });
-
-                        renderCalendar();
-
-                    } else {
-                        userIdDisplay.textContent = 'Not authenticated';
-                        console.log('User signed out or failed to authenticate.');
-                    }
-                });
-            } catch (error) {
-                console.error("Firebase initialization failed:", error);
-                statusMessageEl.textContent = 'Failed to initialize Firebase.';
-                statusMessageEl.classList.add('text-red-400');
-            }
+        // Initial rendering on page load
+        window.onload = function() {
+            renderCalendar();
         };
     </script>
 </body>

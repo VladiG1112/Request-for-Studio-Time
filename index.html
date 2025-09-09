@@ -26,10 +26,16 @@
             color: #4b5563;
             cursor: not-allowed;
         }
+        /* The new highlight style for the selected calendar date */
         .selected-date {
-            background-color: #8b5cf6; /* A shade of purple */
-            color: white;
-            font-weight: 700;
+            background-color: #4c1d95;
+            color: #a78bfa;
+            font-weight: 900;
+            font-size: 2rem; /* Even bigger font size */
+            text-decoration: underline;
+            transform: scale(1.05); /* Slightly increase size */
+            /* Added purple outline */
+            box-shadow: 0 0 0 3px #8b5cf6; 
         }
         .today-outline {
             box-shadow: 0 0 0 2px #e0e0e0;
@@ -48,6 +54,7 @@
             }
         }
         .selected-time {
+            background-color: #4c1d95;
             box-shadow: 0 0 0 3px #8b5cf6, 0 0 0 6px rgba(139, 92, 246, 0.5);
         }
         .nav-button:disabled {
@@ -99,9 +106,43 @@
             pointer-events: none; /* Disable clicks */
             cursor: not-allowed;
         }
+
+        /* Splash Screen Styles */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #121212; /* Start with dark background */
+            display: none; /* Initially hidden */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 1s ease-in-out, background-color 0.5s ease-in-out;
+        }
+        #splashScreen.active {
+            display: flex; /* Show flexbox content */
+            opacity: 1;
+            background-color: #22c55e; /* Green background */
+        }
+        /* The media query makes the splash screen mobile-only */
+        @media (min-width: 768px) {
+            #splashScreen {
+                display: none !important; /* Force hide on larger screens */
+            }
+        }
     </style>
 </head>
 <body class="p-4 sm:p-8 flex flex-col items-center justify-center min-h-screen">
+
+    <!-- Splash Screen Element (initially hidden) -->
+    <div id="splashScreen" class="md:hidden">
+        <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/main/electric-heart-logo.png" alt="Electric Heart Studio Logo" class="w-32 h-32 mb-6 rounded-xl animate-pulse">
+        <h1 class="text-4xl font-extrabold text-white text-center">Submission Successful</h1>
+    </div>
     
     <div class="mb-6 flex flex-col items-center">
         <!-- Logo and Heading -->
@@ -233,6 +274,7 @@
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
         const submitBtn = document.getElementById('submitBtn');
+        const splashScreen = document.getElementById('splashScreen');
 
         // Global state variables
         let currentMonth = new Date().getMonth();
@@ -277,7 +319,10 @@
             return true;
         }
 
-        // Renders the calendar grid for the current month.
+        /**
+         * Renders the calendar grid for the current month.
+         * It rebuilds the calendar and then calls updateCalendarDisplay() to set the visual state.
+         */
         function renderCalendar() {
             calendarEl.innerHTML = '';
             const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
@@ -309,11 +354,15 @@
                 }
                 calendarEl.appendChild(dayEl);
             }
+            // Ensure visual state is updated after rendering
             updateCalendarDisplay();
             updateNavigationButtons();
         }
 
-        // Updates the visual state of the calendar (outlines and highlights).
+        /**
+         * Updates the visual state of the calendar (outlines and highlights) based on global state.
+         * This function is crucial for keeping the selected date highlighted consistently.
+         */
         function updateCalendarDisplay() {
             const allCells = document.querySelectorAll('.calendar-cell, .disabled-date');
             const todayISO = today.toISOString().split('T')[0];
@@ -368,6 +417,7 @@
             selectedDateTextEl.textContent = formattedDate;
             dateInput.value = formattedDate;
             
+            // Crucial: Update the calendar display immediately after a new date is selected
             updateCalendarDisplay();
             renderTimeSlots();
             timeSlotsContainer.classList.remove('hidden');
@@ -529,6 +579,9 @@
             
             // Update the hidden input field for form submission
             timeInput.value = selectedTimes.sort((a, b) => a - b).join(', ');
+            
+            // Crucial: Explicitly call to ensure the selected date remains highlighted after a time slot click
+            updateCalendarDisplay();
         }
         
         // Event listener for people buttons
@@ -584,23 +637,30 @@
                 if (response.ok) {
                     const result = await response.json();
                     if (result && result.success) {
-                        // --- Successful submission state ---
+                        // --- Show splash screen on mobile ---
+                        // Use a media query to check if we are on a mobile screen.
+                        if (window.matchMedia("(max-width: 768px)").matches) {
+                            splashScreen.classList.add('active');
+                            setTimeout(() => {
+                                splashScreen.classList.remove('active');
+                                setTimeout(resetForm, 1000); // Wait for fade-out, then reset
+                            }, 3000); // Splash screen lasts 3 seconds
+                        } else {
+                            // On desktop, simply reset the form as before
+                            resetForm();
+                        }
+
+                        // --- Successful submission button state ---
                         submitBtn.textContent = 'Submission Successful!';
                         submitBtn.classList.remove('submitting');
                         submitBtn.classList.add('success');
                         
-                        // Reset button and form after a delay
+                        // Reset button state after a delay regardless of splash screen
                         setTimeout(() => {
                             submitBtn.textContent = originalBtnText;
                             submitBtn.classList.remove('success');
                             submitBtn.disabled = false;
-                            form.reset();
-                            selectedTimes = [];
-                            document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
-                            peopleInput.value = '';
-                            fetchBookings(); // Refresh bookings
-                            renderTimeSlots(); // Re-render time slots for selected date
-                        }, 3000); 
+                        }, 3000);
 
                     } else {
                         // --- Unsuccessful submission state ---
@@ -631,6 +691,16 @@
                 }, 3000);
             }
         });
+
+        function resetForm() {
+            form.reset();
+            selectedTimes = [];
+            document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
+            peopleInput.value = '';
+            fetchBookings(); // Refresh bookings
+            renderTimeSlots(); // Re-render time slots for selected date
+            updateCalendarDisplay(); // Ensure calendar state is correct
+        }
 
         prevMonthBtn.addEventListener('click', () => {
             currentMonth--;

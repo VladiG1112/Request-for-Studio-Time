@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electric Heart Studio</title>
+    <title>Electric Heart Studios</title>
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -37,11 +38,10 @@
         .time-slot {
             cursor: pointer;
             border-radius: 0.5rem;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: background-color 0.3s, transform 0.2s;
         }
         .time-slot:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .selected-time {
             box-shadow: 0 0 0 3px #8b5cf6, 0 0 0 6px rgba(139, 92, 246, 0.5);
@@ -49,6 +49,25 @@
         .nav-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+        .people-button {
+            transition: background-color 0.2s;
+        }
+        .people-button.selected {
+            background-color: #4c1d95; /* A darker purple for selected state */
+            color: white;
+        }
+        /* New style for booked time slots */
+        .booked-slot {
+            background-color: #dc2626; /* Tailwind's red-600 */
+            color: white;
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Added transition for the form status message */
+        #formStatusMessage {
+            transition: opacity 1s ease-in-out;
         }
     </style>
 </head>
@@ -58,7 +77,7 @@
         <!-- Logo and Heading -->
         <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/main/electric-heart-logo.png" alt="Electric Heart Studio Logo" class="w-24 h-24 mb-4 rounded-xl">
         <h1 class="text-4xl sm:text-5xl font-extrabold text-purple-400 mb-2 text-center">Electric Heart Studio</h1>
-        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Studio Time Request</h2>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Book Studio Time</h2>
     </div>
 
     <div class="bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-4xl">
@@ -95,6 +114,9 @@
                     <p class="text-sm text-gray-400 mb-4">All bookings are for two-hour sessions.</p>
                     <div id="timeSlots" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
                 </div>
+
+                <!-- The new location for the form status message -->
+                <p id="formStatusMessage" class="mt-4 text-center text-sm font-medium"></p>
             </div>
 
             <!-- Booking Form Section -->
@@ -103,19 +125,21 @@
                     <h4 class="text-lg font-semibold mb-4">Booking Details</h4>
                     <input type="hidden" id="dateInput" name="date">
                     <input type="hidden" id="timeInput" name="time">
+                    <input type="hidden" id="peopleInput" name="people">
 
                     <!-- Form fields for user input -->
                     <div>
                         <label for="bandName" class="block text-sm font-medium text-gray-400">Band Name</label>
                         <input type="text" id="bandName" name="bandName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
                     </div>
-                    <div>
-                        <label for="contactName" class="block text-sm font-medium text-gray-400">Contact Person</label>
-                        <input type="text" id="contactName" name="contactName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                    </div>
+                    <!-- Moved Genre of Music field here -->
                     <div>
                         <label for="genre" class="block text-sm font-medium text-gray-400">Genre of Music</label>
                         <input type="text" id="genre" name="genre" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="contactName" class="block text-sm font-medium text-gray-400">Contact Person</label>
+                        <input type="text" id="contactName" name="contactName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
                     </div>
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-400">Email Address</label>
@@ -125,13 +149,18 @@
                         <label for="phone" class="block text-sm font-medium text-gray-400">Phone Number</label>
                         <input type="tel" id="phone" name="phone" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
                     </div>
+                    <!-- Total People in Studio buttons -->
                     <div>
-                        <label for="hours" class="block text-sm font-medium text-gray-400">Approximate Hours</label>
-                        <input type="number" id="hours" name="hours" min="1" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                    </div>
-                    <div>
-                        <label for="people" class="block text-sm font-medium text-gray-400">Total People in Studio</label>
-                        <input type="number" id="people" name="people" min="1" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                        <label class="block text-sm font-medium text-gray-400">Total People in Studio</label>
+                        <div id="peopleButtons" class="mt-1 grid grid-cols-7 gap-2">
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="1">1</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="2">2</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="3">3</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="4">4</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="5">5</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="6">6</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="7">7</button>
+                        </div>
                     </div>
                     <div>
                         <label for="instruments" class="block text-sm font-medium text-gray-400">Primary Instruments</label>
@@ -148,16 +177,13 @@
                     <button type="submit" id="submitBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-full shadow-lg text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-purple-500 transition duration-300">
                         Submit Booking
                     </button>
-                    <p id="submissionStatus" class="mt-4 text-center text-sm font-medium"></p>
                 </form>
             </div>
         </div>
     </div>
 
     <script>
-        // Google Apps Script URL for backend data handling
-        // IMPORTANT: Replace the empty string below with your own deployed script URL.
-        // Follow the instructions in the INSTRUCTIONS.md file.
+        // Paste your new Google Apps Script URL here.
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzSl0EhOvrAhPUhFEqc2DyqGBpzCnDgT3KUP55312MN2RvFNgcU0g2fJfuwLRwdRI9_xg/exec';
         
         // DOM element references
@@ -168,9 +194,12 @@
         const selectedDateTextEl = document.getElementById('selectedDateText');
         const statusMessageEl = document.getElementById('statusMessage');
         const form = document.getElementById('bookingForm');
-        const submissionStatusEl = document.getElementById('submissionStatus');
+        // Changed submissionStatusEl to point to the new location
+        const formStatusMessageEl = document.getElementById('formStatusMessage');
         const dateInput = document.getElementById('dateInput');
         const timeInput = document.getElementById('timeInput');
+        const peopleInput = document.getElementById('peopleInput'); // New hidden input for people count
+        const peopleButtonsContainer = document.getElementById('peopleButtons');
         const prevMonthBtn = document.getElementById('prevMonth');
         const nextMonthBtn = document.getElementById('nextMonth');
 
@@ -179,8 +208,7 @@
         let currentYear = new Date().getFullYear();
         let selectedDate = null;
         let selectedTimes = [];
-        let bookings = [];
-        let fetched = false;
+        let bookedTimes = {};
         
         // Today's date and one month from now for booking logic
         const today = new Date();
@@ -205,6 +233,27 @@
                 hour = 0;
             }
             return hour;
+        }
+
+        /**
+         * Checks if the selected time slots form a consecutive block.
+         * @returns {boolean} True if consecutive, false otherwise.
+         */
+        function isConsecutive() {
+            if (selectedTimes.length <= 1) {
+                return true;
+            }
+            const sortedHours = selectedTimes
+                .map(convertTo24Hour)
+                .sort((a, b) => a - b);
+            
+            for (let i = 0; i < sortedHours.length - 1; i++) {
+                // Check if the difference between consecutive hours is exactly 2
+                if (sortedHours[i + 1] - sortedHours[i] !== 2) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         // Renders the calendar grid for the current month.
@@ -304,163 +353,241 @@
         }
 
         async function fetchBookings() {
+            console.log('Attempting to fetch bookings...');
+            console.log('Using SCRIPT_URL:', SCRIPT_URL);
+
             if (!SCRIPT_URL) {
-                statusMessageEl.textContent = 'Error: SCRIPT_URL is not set. Please deploy your Google Apps Script and update the URL.';
-                statusMessageEl.classList.remove('text-green-400', 'text-gray-400');
+                const message = 'Please deploy your Google Apps Script and update SCRIPT_URL.';
+                statusMessageEl.textContent = message;
                 statusMessageEl.classList.add('text-red-400');
-                console.error('SCRIPT_URL is not set.');
+                console.error(message);
                 return;
             }
-
+            
             statusMessageEl.textContent = 'Fetching bookings...';
             statusMessageEl.classList.add('text-gray-400');
             statusMessageEl.classList.remove('text-red-400', 'text-green-400');
+            
             try {
-                // Use JSONP to fetch data to bypass CORS
-                return new Promise((resolve, reject) => {
-                    window.handleBookingsResponse = (response) => {
-                        if (response.error) {
-                            statusMessageEl.textContent = `Error: ${response.error}`;
-                            statusMessageEl.classList.add('text-red-400');
-                            console.error('Apps Script Error:', response.error);
-                            reject(new Error(response.error));
-                        } else {
-                            bookings = response.bookings || [];
-                            fetched = true;
-                            statusMessageEl.textContent = 'Bookings loaded successfully.';
-                            statusMessageEl.classList.add('text-green-400');
-                            statusMessageEl.classList.remove('text-red-400', 'text-gray-400');
-                            resolve();
+                const response = await fetch(`${SCRIPT_URL}?type=bookings`);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    statusMessageEl.textContent = `HTTP error! Status: ${response.status}. See console for details.`;
+                    statusMessageEl.classList.add('text-red-400');
+                    console.error(`HTTP error! Status: ${response.status}`, { responseText: errorText });
+                    throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('API response data:', data); // Log the raw response
+
+                if (data && data.error) {
+                    statusMessageEl.textContent = `Server Error: ${data.error}`;
+                    statusMessageEl.classList.add('text-red-400');
+                    throw new Error(data.error);
+                } else if (data && data.bookings) {
+                    bookedTimes = {};
+                    data.bookings.forEach(booking => {
+                        const date = booking.date;
+                        if (!bookedTimes[date]) {
+                            bookedTimes[date] = new Set();
                         }
-                    };
-
-                    const script = document.createElement('script');
-                    script.src = `${SCRIPT_URL}?callback=handleBookingsResponse`;
-                    script.onerror = () => {
-                        statusMessageEl.textContent = 'Error fetching bookings. Please ensure your Apps Script is deployed as a Web App with "Anyone" access and that the SCRIPT_URL is correct.';
-                        statusMessageEl.classList.add('text-red-400');
-                        statusMessageEl.classList.remove('text-green-400', 'text-gray-400');
-                        reject(new Error('Failed to fetch bookings'));
-                    };
-                    document.body.appendChild(script);
-                });
-
+                        bookedTimes[date].add(booking.time);
+                    });
+                    statusMessageEl.textContent = 'Bookings loaded successfully.';
+                    statusMessageEl.classList.add('text-green-400');
+                } else {
+                    throw new Error("Invalid data format from server. Expected an object with a 'bookings' key.");
+                }
             } catch (error) {
-                statusMessageEl.textContent = `Error fetching bookings: ${error.message}`;
+                statusMessageEl.textContent = `Error fetching bookings: ${error.message}. Check your console for details.`;
                 statusMessageEl.classList.add('text-red-400');
                 console.error('Error fetching data:', error);
+            } finally {
+                 statusMessageEl.classList.remove('text-gray-400', 'text-green-400', 'text-red-400');
+                 if(statusMessageEl.textContent.includes('Error') === false) {
+                     statusMessageEl.textContent = '';
+                 }
             }
         }
+
 
         function renderTimeSlots() {
             timeSlotsEl.innerHTML = '';
             
+            if (!selectedDate) return;
+
             const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
             const hours = (dayOfWeek >= 1 && dayOfWeek <= 5) ? weekdayHours : weekendHours;
 
             const formattedDate = selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
             
             hours.forEach(hour => {
+                const isBooked = bookedTimes[formattedDate] && bookedTimes[formattedDate].has(hour);
+                
                 const slotEl = document.createElement('div');
                 slotEl.textContent = hour;
-                slotEl.classList.add('p-2', 'rounded-lg', 'text-center', 'font-semibold', 'text-sm', 'time-slot');
+                slotEl.classList.add('p-2', 'rounded-lg', 'text-center', 'font-semibold', 'text-sm');
+                // Added a data attribute for easier DOM lookup in JS
+                slotEl.dataset.time = hour;
 
-                // Normalize the booked times from the Google Sheet
-                const bookedTimesForDate = bookings.filter(booking => booking.date === formattedDate);
-                const normalizedBookedTimes = bookedTimesForDate.flatMap(booking => 
-                    booking.time.split(',').map(t => t.replace(':00', '').trim())
-                );
-                
-                const isBooked = normalizedBookedTimes.includes(hour);
-                
                 if (isBooked) {
-                    slotEl.classList.add('bg-red-800', 'text-gray-300', 'cursor-not-allowed');
+                    // Apply booked styling and prevent clicks
+                    slotEl.classList.add('booked-slot');
+                    // We don't need a click event listener if it's booked
                 } else {
-                    slotEl.classList.add('bg-green-600', 'hover:bg-green-700');
+                    // Apply normal styling and add a click event listener
+                    slotEl.classList.add('time-slot', 'bg-gray-800', 'hover:bg-purple-500', 'text-gray-300');
                     slotEl.addEventListener('click', () => toggleTime(hour, slotEl));
                 }
+
                 timeSlotsEl.appendChild(slotEl);
             });
         }
+        
+        // Timer for the status message
+        let statusMessageTimer;
 
+        function showStatusMessage(message, type = 'error') {
+            clearTimeout(statusMessageTimer);
+            formStatusMessageEl.textContent = message;
+            formStatusMessageEl.style.opacity = '1';
+            formStatusMessageEl.classList.remove('text-green-400', 'text-gray-400', 'text-red-400');
+            if (type === 'error') {
+                formStatusMessageEl.classList.add('text-red-400');
+            } else if (type === 'success') {
+                formStatusMessageEl.classList.add('text-green-400');
+            } else {
+                formStatusMessageEl.classList.add('text-gray-400');
+            }
+
+            // Hide the message after 3 seconds
+            statusMessageTimer = setTimeout(() => {
+                formStatusMessageEl.style.opacity = '0';
+                // After fade out, clear the text to be ready for next message
+                setTimeout(() => {
+                    formStatusMessageEl.textContent = '';
+                }, 1000); // Wait for the transition to finish
+            }, 3000); // Show for 3 seconds
+        }
+        
         function toggleTime(time, el) {
             const index = selectedTimes.indexOf(time);
             
-            // If the time is already selected, unselect it
             if (index > -1) {
+                // Deselecting a time slot
                 selectedTimes.splice(index, 1);
                 el.classList.remove('selected-time');
-            } else {
-                // If no times are selected, just select the current one
-                if (selectedTimes.length === 0) {
-                    selectedTimes.push(time);
-                    el.classList.add('selected-time');
-                } else {
-                    // Check for continuity
-                    const newHour = convertTo24Hour(time);
-                    const selectedHours = selectedTimes.map(convertTo24Hour).sort((a, b) => a - b);
-                    const minHour = selectedHours[0];
-                    const maxHour = selectedHours[selectedHours.length - 1];
 
-                    // Check if the new time is adjacent to the existing block
-                    if (newHour === minHour - 2 || newHour === maxHour + 2) {
-                        selectedTimes.push(time);
-                        el.classList.add('selected-time');
-                    } else {
-                        // If not continuous, show a warning and do not select
-                        submissionStatusEl.textContent = 'Please select a continuous block of time.';
-                        submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
-                        submissionStatusEl.classList.add('text-red-400');
-                        return; // Exit without adding the time
+                // Check if the remaining times are now non-consecutive
+                if (selectedTimes.length > 1 && !isConsecutive()) {
+                    // Find the last selected time based on its position in the sorted array
+                    const sortedTimes = selectedTimes.slice().sort((a,b) => convertTo24Hour(a) - convertTo24Hour(b));
+                    const lastTime = sortedTimes[sortedTimes.length - 1];
+                    const lastTimeIndex = selectedTimes.indexOf(lastTime);
+
+                    // Remove the last time and its highlight
+                    if (lastTimeIndex > -1) {
+                        selectedTimes.splice(lastTimeIndex, 1);
+                        const lastEl = document.querySelector(`.time-slot[data-time="${lastTime}"]`);
+                        if (lastEl) {
+                            lastEl.classList.remove('selected-time');
+                        }
                     }
+                    showStatusMessage("Multiple 2 hour bookings must be consecutive bookings.");
                 }
+            } else {
+                // Selecting a new time slot
+                // Check if the new selection would create a non-consecutive block
+                const tempTimes = [...selectedTimes, time];
+                if (tempTimes.length > 1 && !isConsecutiveWithNewTime(tempTimes)) {
+                     showStatusMessage('Multiple 2 hour bookings must be consecutive bookings.');
+                     return;
+                }
+                selectedTimes.push(time);
+                el.classList.add('selected-time');
             }
             
             // Update the hidden input field for form submission
-            // We join with a comma to ensure a consistent format for both single and multiple selections
             timeInput.value = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
         }
+        
+        // Helper function to check for continuity with a new time slot
+        function isConsecutiveWithNewTime(times) {
+            const sortedHours = times.map(convertTo24Hour).sort((a, b) => a - b);
+            for (let i = 0; i < sortedHours.length - 1; i++) {
+                if (sortedHours[i + 1] - sortedHours[i] !== 2) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        // Event listener for people buttons
+        peopleButtonsContainer.addEventListener('click', (event) => {
+            const button = event.target.closest('.people-button');
+            if (button) {
+                // Remove selected class from all buttons
+                document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
+                // Add selected class to the clicked button
+                button.classList.add('selected');
+                // Set the value of the hidden input
+                peopleInput.value = button.dataset.people;
+            }
+        });
 
         // Form Submission Logic
         form.addEventListener('submit', async function(event) {
             event.preventDefault();
 
+            // Clear previous messages
+            formStatusMessageEl.textContent = '';
+            
             if (selectedTimes.length === 0) {
-                submissionStatusEl.textContent = 'Please select at least one time slot.';
-                submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
-                submissionStatusEl.classList.add('text-red-400');
+                showStatusMessage('Please select at least one time slot.');
                 return;
             }
 
-            submissionStatusEl.textContent = 'Submitting...';
-            submissionStatusEl.classList.remove('text-green-400', 'text-red-400');
-            submissionStatusEl.classList.add('text-gray-400');
+            // New validation check for consecutive blocks before submission
+            if (!isConsecutive()) {
+                showStatusMessage('Multiple 2 hour bookings must be consecutive bookings.');
+                return;
+            }
+
+            if (!peopleInput.value) {
+                showStatusMessage('Please select the number of people.');
+                return;
+            }
+            
+            if (!SCRIPT_URL) {
+                showStatusMessage('SCRIPT_URL is not set. Please follow the instructions to deploy your Google Apps Script.');
+                return;
+            }
+
+            formStatusMessageEl.textContent = 'Submitting...';
+            formStatusMessageEl.classList.remove('text-green-400', 'text-red-400');
+            formStatusMessageEl.classList.add('text-gray-400');
 
             const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-            data.time = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
-
+            formData.set('time', selectedTimes.join(', '));
+            
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'cors',
-                    cache: 'no-cache',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    redirect: 'follow',
-                    body: JSON.stringify(data)
+                    body: formData,
                 });
 
                 if (response.ok) {
                     const result = await response.json();
                     if (result.success) {
-                        submissionStatusEl.textContent = 'Booking submitted successfully! We will contact you shortly.';
-                        submissionStatusEl.classList.remove('text-gray-400', 'text-red-400');
-                        submissionStatusEl.classList.add('text-green-400');
+                        showStatusMessage('Request submitted successfully! We will contact you shortly.', 'success');
                         form.reset();
                         selectedTimes = [];
-                        fetchBookings(); // Refresh bookings
+                        document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
+                        peopleInput.value = '';
+                        await fetchBookings(); // Refresh bookings
+                        renderTimeSlots(); // Re-render time slots for selected date
                     } else {
                         throw new Error(result.error || 'Submission failed');
                     }
@@ -469,9 +596,7 @@
                 }
             } catch (error) {
                 console.error('Submission Error:', error);
-                submissionStatusEl.textContent = 'Oops! An error occurred. Please try again.';
-                submissionStatusEl.classList.remove('text-gray-400', 'text-green-400');
-                submissionStatusEl.classList.add('text-red-400');
+                showStatusMessage('Oops! An error occurred. Please try again.');
             }
         });
 
@@ -495,9 +620,9 @@
             timeSlotsContainer.classList.add('hidden');
         });
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            await fetchBookings();
             renderCalendar();
-            fetchBookings();
         });
     </script>
 </body>

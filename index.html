@@ -581,28 +581,31 @@
                     if (result && result.success) {
                         // --- Successful submission state ---
                         submitBtn.textContent = 'Submission Successful!';
+                        submitBtn.classList.remove('submitting');
                         submitBtn.classList.add('success');
                         
+                        // Reset button and form after a delay
                         setTimeout(() => {
                             submitBtn.textContent = originalBtnText;
-                            submitBtn.classList.remove('success', 'submitting');
+                            submitBtn.classList.remove('success');
                             submitBtn.disabled = false;
+                            form.reset();
+                            selectedTimes = [];
+                            document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
+                            peopleInput.value = '';
+                            fetchBookings(); // Refresh bookings
+                            renderTimeSlots(); // Re-render time slots for selected date
                         }, 3000); 
 
-                        form.reset();
-                        selectedTimes = [];
-                        document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
-                        peopleInput.value = '';
-                        await fetchBookings(); // Refresh bookings
-                        renderTimeSlots(); // Re-render time slots for selected date
                     } else {
                         // --- Unsuccessful submission state ---
                         console.error('Submission failed. Server response:', result);
                         submitBtn.textContent = 'Submission Unsuccessful';
+                        submitBtn.classList.remove('submitting');
                         submitBtn.classList.add('failure');
                         setTimeout(() => {
                             submitBtn.textContent = originalBtnText;
-                            submitBtn.classList.remove('failure', 'submitting');
+                            submitBtn.classList.remove('failure');
                             submitBtn.disabled = false;
                         }, 3000);
                     }
@@ -613,11 +616,12 @@
                 console.error('Submission Error:', error);
                 // --- Unsuccessful submission state due to fetch error ---
                 submitBtn.textContent = 'Submission Unsuccessful';
+                submitBtn.classList.remove('submitting');
                 submitBtn.classList.add('failure');
                 // Reset button state after a brief visual cue
                 setTimeout(() => {
                     submitBtn.textContent = originalBtnText;
-                    submitBtn.classList.remove('failure', 'submitting');
+                    submitBtn.classList.remove('failure');
                     submitBtn.disabled = false;
                 }, 3000);
             }

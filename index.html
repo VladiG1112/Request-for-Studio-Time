@@ -50,11 +50,12 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
-        .booked-slot {
-            background-color: #ef4444; /* red-500 */
+        .people-button {
+            transition: background-color 0.2s;
+        }
+        .people-button.selected {
+            background-color: #4c1d95; /* A darker purple for selected state */
             color: white;
-            cursor: not-allowed;
-            text-decoration: line-through;
         }
     </style>
 </head>
@@ -64,7 +65,7 @@
         <!-- Logo and Heading -->
         <img src="https://raw.githubusercontent.com/VladiG1112/Request-for-Studio-Time/main/electric-heart-logo.png" alt="Electric Heart Studio Logo" class="w-24 h-24 mb-4 rounded-xl">
         <h1 class="text-4xl sm:text-5xl font-extrabold text-purple-400 mb-2 text-center">Electric Heart Studio</h1>
-        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Studio Time Request</h2>
+        <h2 class="text-2xl sm:text-3xl font-bold text-white text-center">Studio Time</h2>
     </div>
 
     <div class="bg-gray-900 rounded-3xl shadow-2xl p-6 sm:p-10 w-full max-w-4xl">
@@ -109,19 +110,21 @@
                     <h4 class="text-lg font-semibold mb-4">Booking Details</h4>
                     <input type="hidden" id="dateInput" name="date">
                     <input type="hidden" id="timeInput" name="time">
+                    <input type="hidden" id="peopleInput" name="people">
 
                     <!-- Form fields for user input -->
                     <div>
                         <label for="bandName" class="block text-sm font-medium text-gray-400">Band Name</label>
                         <input type="text" id="bandName" name="bandName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
                     </div>
-                    <div>
-                        <label for="contactName" class="block text-sm font-medium text-gray-400">Contact Person</label>
-                        <input type="text" id="contactName" name="contactName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
-                    </div>
+                    <!-- Moved Genre of Music field here -->
                     <div>
                         <label for="genre" class="block text-sm font-medium text-gray-400">Genre of Music</label>
                         <input type="text" id="genre" name="genre" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                    </div>
+                    <div>
+                        <label for="contactName" class="block text-sm font-medium text-gray-400">Contact Person</label>
+                        <input type="text" id="contactName" name="contactName" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
                     </div>
                     <div>
                         <label for="email" class="block text-sm font-medium text-gray-400">Email Address</label>
@@ -131,9 +134,18 @@
                         <label for="phone" class="block text-sm font-medium text-gray-400">Phone Number</label>
                         <input type="tel" id="phone" name="phone" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
                     </div>
+                    <!-- Total People in Studio buttons -->
                     <div>
-                        <label for="people" class="block text-sm font-medium text-gray-400">Total People in Studio</label>
-                        <input type="number" id="people" name="people" min="1" required class="mt-1 block w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-purple-500 transition duration-300">
+                        <label class="block text-sm font-medium text-gray-400">Total People in Studio</label>
+                        <div id="peopleButtons" class="mt-1 grid grid-cols-7 gap-2">
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="1">1</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="2">2</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="3">3</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="4">4</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="5">5</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="6">6</button>
+                            <button type="button" class="people-button w-full px-2 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300" data-people="7">7</button>
+                        </div>
                     </div>
                     <div>
                         <label for="instruments" class="block text-sm font-medium text-gray-400">Primary Instruments</label>
@@ -155,290 +167,341 @@
             </div>
         </div>
     </div>
-    
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const calendarEl = document.getElementById('calendar');
-            const currentMonthEl = document.getElementById('currentMonth');
-            const timeSlotsContainer = document.getElementById('timeSlotsContainer');
-            const timeSlotsEl = document.getElementById('timeSlots');
-            const selectedDateTextEl = document.getElementById('selectedDateText');
-            const statusMessageEl = document.getElementById('statusMessage');
-            const form = document.getElementById('bookingForm');
-            const submissionStatusEl = document.getElementById('submissionStatus');
-            const dateInput = document.getElementById('dateInput');
-            const timeInput = document.getElementById('timeInput');
-            const prevMonthBtn = document.getElementById('prevMonth');
-            const nextMonthBtn = document.getElementById('nextMonth');
+        // Google Apps Script URL for backend data handling
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxP_RZHhnEGKE7kotxRkYtHoGiBuDHV31Xi52wpVb04YyVvUEnNhnRpIAmxbQdC0NWrvQ/exec';
+        
+        // DOM element references
+        const calendarEl = document.getElementById('calendar');
+        const currentMonthEl = document.getElementById('currentMonth');
+        const timeSlotsContainer = document.getElementById('timeSlotsContainer');
+        const timeSlotsEl = document.getElementById('timeSlots');
+        const selectedDateTextEl = document.getElementById('selectedDateText');
+        const statusMessageEl = document.getElementById('statusMessage');
+        const form = document.getElementById('bookingForm');
+        const submissionStatusEl = document.getElementById('submissionStatus');
+        const dateInput = document.getElementById('dateInput');
+        const timeInput = document.getElementById('timeInput');
+        const peopleInput = document.getElementById('peopleInput'); // New hidden input for people count
+        const peopleButtonsContainer = document.getElementById('peopleButtons');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
 
-            let currentMonth = new Date().getMonth();
-            let currentYear = new Date().getFullYear();
-            let selectedDate = null;
-            let selectedTimes = [];
-            let bookedTimes = {};
+        // Global state variables
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+        let selectedTimes = [];
+        let bookedTimes = {};
+        
+        // Today's date and one month from now for booking logic
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        const oneMonthFromNow = new Date();
+        oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+        oneMonthFromNow.setHours(0, 0, 0, 0);
+
+        // Updated hours for two-hour sessions
+        const weekdayHours = ['5 PM', '7 PM', '9 PM'];
+        const weekendHours = ['2 PM', '4 PM'];
+
+        // Helper function to convert 12-hour time to 24-hour integer for comparison
+        function convertTo24Hour(timeStr) {
+            const [time, period] = timeStr.split(' ');
+            let [hour] = time.split(':');
+            hour = parseInt(hour);
+            if (period === 'PM' && hour !== 12) {
+                hour += 12;
+            }
+            if (period === 'AM' && hour === 12) {
+                hour = 0;
+            }
+            return hour;
+        }
+
+        // Renders the calendar grid for the current month.
+        function renderCalendar() {
+            calendarEl.innerHTML = '';
+            const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+            const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
             
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); 
-            const oneMonthFromNow = new Date();
-            oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
-            oneMonthFromNow.setHours(0, 0, 0, 0);
+            currentMonthEl.textContent = firstDayOfMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-            // Updated hours for two-hour sessions
-            const weekdayHours = ['5 PM', '7 PM', '9 PM'];
-            const weekendHours = ['2 PM', '4 PM'];
+            const emptyCells = firstDayOfMonth.getDay();
+            for (let i = 0; i < emptyCells; i++) {
+                const dayEl = document.createElement('div');
+                calendarEl.appendChild(dayEl);
+            }
 
-            // Fetches booking data from the Google Apps Script
-            window.handleBookingsResponse = function(response) {
-                if (response && response.bookings) {
+            for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
+                const date = new Date(currentYear, currentMonth, i);
+                date.setHours(0, 0, 0, 0); 
+
+                const dayEl = document.createElement('div');
+                dayEl.textContent = i;
+                dayEl.classList.add('p-2', 'rounded-lg', 'text-sm', 'text-center');
+                dayEl.dataset.date = date.toISOString().split('T')[0];
+                
+                // Check if the date is within the allowed booking range
+                if (date >= today && date <= oneMonthFromNow) {
+                    dayEl.classList.add('bg-gray-800', 'hover:bg-purple-500', 'calendar-cell', 'cursor-pointer', 'shadow-sm', 'text-gray-300');
+                    dayEl.addEventListener('click', () => handleDateClick(date));
+                } else {
+                    dayEl.classList.add('disabled-date');
+                }
+                calendarEl.appendChild(dayEl);
+            }
+            updateCalendarDisplay();
+            updateNavigationButtons();
+        }
+
+        // Updates the visual state of the calendar (outlines and highlights).
+        function updateCalendarDisplay() {
+            const allCells = document.querySelectorAll('.calendar-cell, .disabled-date');
+            const todayISO = today.toISOString().split('T')[0];
+            const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+
+            allCells.forEach(cell => {
+                // First, remove all visual state classes to start fresh
+                cell.classList.remove('selected-date', 'today-outline');
+
+                const cellDateISO = cell.dataset.date;
+
+                // Re-apply today's outline if it's the current date
+                if (cellDateISO === todayISO) {
+                    cell.classList.add('today-outline');
+                }
+
+                // Re-apply selected date's highlight
+                if (selectedDateISO && cellDateISO === selectedDateISO) {
+                    cell.classList.add('selected-date');
+                }
+            });
+        }
+        
+        // Updates the state of the navigation buttons
+        function updateNavigationButtons() {
+            const firstDayOfCurrentMonth = new Date(currentYear, currentMonth, 1);
+            const todayMonth = today.getMonth();
+            const todayYear = today.getFullYear();
+            
+            // Disable previous month button if we are in the current month or earlier
+            if (currentYear < todayYear || (currentYear === todayYear && currentMonth <= todayMonth)) {
+                prevMonthBtn.disabled = true;
+            } else {
+                prevMonthBtn.disabled = false;
+            }
+
+            // Disable next month button if we are already a month ahead
+            const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
+            if (nextMonthDate > oneMonthFromNow) {
+                nextMonthBtn.disabled = true;
+            } else {
+                nextMonthBtn.disabled = false;
+            }
+        }
+
+
+        // Handles a user's click on a calendar date.
+        function handleDateClick(date) {
+            selectedDate = date;
+            selectedTimes = [];
+            const formattedDate = date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            selectedDateTextEl.textContent = formattedDate;
+            dateInput.value = formattedDate;
+            
+            updateCalendarDisplay();
+            renderTimeSlots();
+            timeSlotsContainer.classList.remove('hidden');
+        }
+
+        async function fetchBookings() {
+            statusMessageEl.textContent = 'Fetching bookings...';
+            statusMessageEl.classList.add('text-gray-400');
+            statusMessageEl.classList.remove('text-red-400', 'text-green-400');
+            try {
+                const response = await fetch(`${SCRIPT_URL}?type=bookings`);
+                const data = await response.json();
+                
+                if (data && data.bookings) {
                     bookedTimes = {};
-                    response.bookings.forEach(booking => {
-                        const date = booking.date;
+                    data.bookings.forEach(booking => {
+                        const date = new Date(booking.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
                         if (!bookedTimes[date]) {
                             bookedTimes[date] = new Set();
                         }
                         bookedTimes[date].add(booking.time);
                     });
+                    statusMessageEl.textContent = 'Bookings loaded successfully.';
+                    statusMessageEl.classList.add('text-green-400');
+                    statusMessageEl.classList.remove('text-red-400', 'text-gray-400');
+                } else {
+                    throw new Error("Invalid data format from server.");
                 }
-                statusMessageEl.textContent = '';
-                renderCalendar();
-                renderTimeSlots();
-            };
-
-            function fetchBookedData() {
-                statusMessageEl.textContent = 'Loading bookings...';
-                const scriptUrl = 'https://script.google.com/macros/s/AKfycbxP_RZHhnEGKE7kotxRkYtHoGiBuDHV31Xi52wpVb04YyVvUEnNhnRpIAmxbQdC0NWrvQ/exec'; // Replace with your script URL
-                const script = document.createElement('script');
-                script.src = `${scriptUrl}?type=bookings&callback=handleBookingsResponse`;
-                document.body.appendChild(script);
+            } catch (error) {
+                statusMessageEl.textContent = `Error fetching bookings: ${error.message}`;
+                statusMessageEl.classList.add('text-red-400');
+                statusMessageEl.classList.remove('text-green-400', 'text-gray-400');
+                console.error('Error fetching data:', error);
             }
+        }
 
-            // Renders the calendar grid for the current month.
-            function renderCalendar() {
-                calendarEl.innerHTML = '';
-                const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
-                const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
-                
-                currentMonthEl.textContent = firstDayOfMonth.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-                const emptyCells = firstDayOfMonth.getDay();
-                for (let i = 0; i < emptyCells; i++) {
-                    const dayEl = document.createElement('div');
-                    calendarEl.appendChild(dayEl);
-                }
-
-                for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
-                    const date = new Date(currentYear, currentMonth, i);
-                    date.setHours(0, 0, 0, 0); 
-
-                    const dayEl = document.createElement('div');
-                    dayEl.textContent = i;
-                    dayEl.classList.add('p-2', 'rounded-lg', 'text-sm', 'text-center');
-                    dayEl.dataset.date = date.toISOString().split('T')[0];
-                    
-                    // Check if the date is within the allowed booking range
-                    if (date >= today && date <= oneMonthFromNow) {
-                        dayEl.classList.add('bg-gray-800', 'hover:bg-purple-500', 'calendar-cell', 'cursor-pointer', 'shadow-sm', 'text-gray-300');
-                        dayEl.addEventListener('click', () => handleDateClick(date));
-                    } else {
-                        dayEl.classList.add('disabled-date');
-                    }
-                    calendarEl.appendChild(dayEl);
-                }
-                updateCalendarDisplay();
-                updateNavigationButtons();
-            }
-
-            // Updates the visual state of the calendar (outlines and highlights).
-            function updateCalendarDisplay() {
-                const allCells = document.querySelectorAll('.calendar-cell, .disabled-date');
-                const todayISO = today.toISOString().split('T')[0];
-                const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
-
-                allCells.forEach(cell => {
-                    cell.classList.remove('selected-date'); // Always remove the selected highlight first
-                    if (cell.dataset.date === todayISO) {
-                        cell.classList.add('today-outline');
-                    } else {
-                        cell.classList.remove('today-outline');
-                    }
-                    if (selectedDateISO && cell.dataset.date === selectedDateISO) {
-                        cell.classList.add('selected-date');
-                    }
-                });
-            }
-
-            function handleDateClick(date) {
-                selectedDate = date;
-                selectedTimes = [];
-                updateCalendarDisplay();
-                
-                const dayOfWeek = date.getDay();
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                const availableHours = isWeekend ? weekendHours : weekdayHours;
-                
-                selectedDateTextEl.textContent = selectedDate.toDateString();
-                timeSlotsContainer.classList.remove('hidden');
-                renderTimeSlots(availableHours);
-            }
+        function renderTimeSlots() {
+            timeSlotsEl.innerHTML = '';
             
-            function renderTimeSlots(hours) {
-                timeSlotsEl.innerHTML = '';
-                const selectedDateISO = selectedDate ? selectedDate.toISOString().split('T')[0] : null;
+            const dayOfWeek = selectedDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const hours = (dayOfWeek >= 1 && dayOfWeek <= 5) ? weekdayHours : weekendHours;
 
-                if (!hours) {
-                    return;
-                }
+            const formattedDate = selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+            
+            hours.forEach(hour => {
+                const slotEl = document.createElement('div');
+                slotEl.textContent = hour;
+                slotEl.classList.add('p-2', 'rounded-lg', 'text-center', 'font-semibold', 'text-sm', 'time-slot');
 
-                hours.forEach(hour => {
-                    const slotEl = document.createElement('div');
-                    slotEl.textContent = hour;
-                    slotEl.classList.add('p-3', 'text-center', 'bg-gray-800', 'rounded-xl', 'time-slot', 'shadow-lg');
-
-                    const isBooked = bookedTimes[selectedDateISO] && bookedTimes[selectedDateISO].has(hour);
-                    if (isBooked) {
-                        slotEl.classList.add('booked-slot');
-                    } else {
-                        slotEl.addEventListener('click', () => handleTimeClick(hour));
-                    }
-                    timeSlotsEl.appendChild(slotEl);
-                });
-            }
-
-            function handleTimeClick(time) {
-                const isBooked = bookedTimes[selectedDate.toISOString().split('T')[0]] && bookedTimes[selectedDate.toISOString().split('T')[0]].has(time);
+                const isBooked = bookedTimes[formattedDate] && bookedTimes[formattedDate].has(hour);
+                
                 if (isBooked) {
-                    return;
-                }
-                if (selectedTimes.includes(time)) {
-                    selectedTimes = selectedTimes.filter(t => t !== time);
+                    slotEl.classList.add('bg-red-800', 'text-gray-300', 'cursor-not-allowed');
                 } else {
-                    const isContinuous = selectedTimes.length === 0 || 
-                                         (selectedTimes.length > 0 && 
-                                          (convertTo24Hour(time) === convertTo24Hour(selectedTimes[selectedTimes.length - 1]) + 2));
-                    if (isContinuous) {
+                    slotEl.classList.add('bg-green-600', 'hover:bg-green-700');
+                    slotEl.addEventListener('click', () => toggleTime(hour, slotEl));
+                }
+                timeSlotsEl.appendChild(slotEl);
+            });
+        }
+
+        function toggleTime(time, el) {
+            const index = selectedTimes.indexOf(time);
+            
+            // If the time is already selected, unselect it
+            if (index > -1) {
+                selectedTimes.splice(index, 1);
+                el.classList.remove('selected-time');
+            } else {
+                // If no times are selected, just select the current one
+                if (selectedTimes.length === 0) {
+                    selectedTimes.push(time);
+                    el.classList.add('selected-time');
+                } else {
+                    // Check for continuity
+                    const newHour = convertTo24Hour(time);
+                    const selectedHours = selectedTimes.map(convertTo24Hour).sort((a, b) => a - b);
+                    const minHour = selectedHours[0];
+                    const maxHour = selectedHours[selectedHours.length - 1];
+
+                    // Check if the new time is adjacent to the existing block
+                    if (newHour === minHour - 2 || newHour === maxHour + 2) {
                         selectedTimes.push(time);
+                        el.classList.add('selected-time');
                     } else {
-                        submissionStatusEl.textContent = "Please select continuous time slots.";
+                        // If not continuous, show a warning and do not select
+                        submissionStatusEl.textContent = 'Please select a continuous block of time.';
+                        submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
                         submissionStatusEl.classList.add('text-red-400');
-                        setTimeout(() => {
-                            submissionStatusEl.textContent = '';
-                            submissionStatusEl.classList.remove('text-red-400');
-                        }, 3000);
-                        return;
+                        return; // Exit without adding the time
                     }
                 }
-                
-                const allSlots = document.querySelectorAll('.time-slot');
-                allSlots.forEach(slot => {
-                    slot.classList.remove('selected-time');
-                    if (selectedTimes.includes(slot.textContent)) {
-                        slot.classList.add('selected-time');
-                    }
+            }
+            
+            // Update the hidden input field for form submission
+            timeInput.value = selectedTimes.sort((a, b) => convertTo24Hour(a) - convertTo24Hour(b)).join(', ');
+        }
+        
+        // Event listener for people buttons
+        peopleButtonsContainer.addEventListener('click', (event) => {
+            const button = event.target.closest('.people-button');
+            if (button) {
+                // Remove selected class from all buttons
+                document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
+                // Add selected class to the clicked button
+                button.classList.add('selected');
+                // Set the value of the hidden input
+                peopleInput.value = button.dataset.people;
+            }
+        });
+
+        // Form Submission Logic
+        form.addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            if (selectedTimes.length === 0) {
+                submissionStatusEl.textContent = 'Please select at least one time slot.';
+                submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
+                submissionStatusEl.classList.add('text-red-400');
+                return;
+            }
+
+            if (!peopleInput.value) {
+                submissionStatusEl.textContent = 'Please select the number of people.';
+                submissionStatusEl.classList.remove('text-green-400', 'text-gray-400');
+                submissionStatusEl.classList.add('text-red-400');
+                return;
+            }
+
+            submissionStatusEl.textContent = 'Submitting...';
+            submissionStatusEl.classList.remove('text-green-400', 'text-red-400');
+            submissionStatusEl.classList.add('text-gray-400');
+
+            const formData = new FormData(form);
+            formData.set('time', selectedTimes.join(', '));
+            
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
                 });
-            }
-            
-            function convertTo24Hour(timeStr) {
-                const [time, period] = timeStr.split(' ');
-                let [hour] = time.split(':');
-                hour = parseInt(hour);
-                if (period === 'PM' && hour !== 12) {
-                    hour += 12;
-                }
-                if (period === 'AM' && hour === 12) {
-                    hour = 0;
-                }
-                return hour;
-            }
 
-            // Updates the state of the navigation buttons
-            function updateNavigationButtons() {
-                const todayMonth = today.getMonth();
-                const todayYear = today.getFullYear();
-                
-                // Disable previous month button if we are in the current month or earlier
-                if (currentYear < todayYear || (currentYear === todayYear && currentMonth <= todayMonth)) {
-                    prevMonthBtn.disabled = true;
-                } else {
-                    prevMonthBtn.disabled = false;
-                }
-
-                // Disable next month button if we are already a month ahead
-                const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
-                if (nextMonthDate > oneMonthFromNow) {
-                    nextMonthBtn.disabled = true;
-                } else {
-                    nextMonthBtn.disabled = false;
-                }
-            }
-            
-            // Event listeners for month navigation
-            prevMonthBtn.addEventListener('click', () => {
-                currentMonth--;
-                if (currentMonth < 0) {
-                    currentMonth = 11;
-                    currentYear--;
-                }
-                renderCalendar();
-            });
-
-            nextMonthBtn.addEventListener('click', () => {
-                currentMonth++;
-                if (currentMonth > 11) {
-                    currentMonth = 0;
-                    currentYear++;
-                }
-                renderCalendar();
-            });
-
-            // Handle form submission
-            form.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                if (!selectedDate || selectedTimes.length === 0) {
-                    submissionStatusEl.textContent = "Please select a date and time slot(s).";
-                    submissionStatusEl.classList.add('text-red-400');
-                    return;
-                }
-
-                submissionStatusEl.textContent = "Submitting booking...";
-                submissionStatusEl.classList.remove('text-red-400', 'text-green-400');
-                submissionStatusEl.classList.add('text-yellow-400');
-
-                try {
-                    const formData = new FormData(form);
-                    formData.set('date', selectedDate.toLocaleDateString());
-                    formData.set('time', selectedTimes.join(', '));
-                    
-                    const response = await fetch(form.action, {
-                        method: 'POST',
-                        body: formData,
-                        mode: 'no-cors'
-                    });
-                    
-                    if (response.status === 0 || response.ok) {
-                         submissionStatusEl.textContent = "Booking submitted successfully! You should receive an email confirmation.";
-                         submissionStatusEl.classList.remove('text-yellow-400');
-                         submissionStatusEl.classList.add('text-green-400');
-                         form.reset();
-                         selectedDate = null;
-                         selectedTimes = [];
-                         timeSlotsContainer.classList.add('hidden');
-                         fetchBookedData(); // Re-fetch to update booked slots
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.success) {
+                        submissionStatusEl.textContent = 'Booking submitted successfully! We will contact you shortly.';
+                        submissionStatusEl.classList.remove('text-gray-400', 'text-red-400');
+                        submissionStatusEl.classList.add('text-green-400');
+                        form.reset();
+                        selectedTimes = [];
+                        document.querySelectorAll('.people-button').forEach(btn => btn.classList.remove('selected'));
+                        peopleInput.value = '';
+                        fetchBookings(); // Refresh bookings
                     } else {
-                         submissionStatusEl.textContent = "Oops! An error occurred. Please try again.";
-                         submissionStatusEl.classList.remove('text-yellow-400');
-                         submissionStatusEl.classList.add('text-red-400');
+                        throw new Error(result.error || 'Submission failed');
                     }
-                } catch (error) {
-                    console.error('Submission error:', error);
-                    submissionStatusEl.textContent = "Oops! An error occurred. Please try again.";
-                    submissionStatusEl.classList.remove('text-yellow-400');
-                    submissionStatusEl.classList.add('text-red-400');
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            });
+            } catch (error) {
+                console.error('Submission Error:', error);
+                submissionStatusEl.textContent = 'Oops! An error occurred. Please try again.';
+                submissionStatusEl.classList.remove('text-gray-400', 'text-green-400');
+                submissionStatusEl.classList.add('text-red-400');
+            }
+        });
 
-            // Initial render and data fetch
-            fetchBookedData();
+        prevMonthBtn.addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            renderCalendar();
+            timeSlotsContainer.classList.add('hidden');
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            renderCalendar();
+            timeSlotsContainer.classList.add('hidden');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCalendar();
+            fetchBookings();
         });
     </script>
 </body>

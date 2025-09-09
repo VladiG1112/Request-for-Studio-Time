@@ -206,7 +206,7 @@
 
             function fetchBookedData() {
                 statusMessageEl.textContent = 'Loading bookings...';
-                const scriptUrl = 'https://script.google.com/macros/s/AKfycbwQf3L4P4p4R_2g1bXj0J1r0Vb6a8k7T1q0bXl1V1f1/exec'; // Replace with your script URL
+                const scriptUrl = 'https://script.google.com/macros/s/AKfycbxP_RZHhnEGKE7kotxRkYtHoGiBuDHV31Xi52wpVb04YyVvUEnNhnRpIAmxbQdC0NWrvQ/exec'; // Replace with your script URL
                 const script = document.createElement('script');
                 script.src = `${scriptUrl}?type=bookings&callback=handleBookingsResponse`;
                 document.body.appendChild(script);
